@@ -1,7 +1,7 @@
 {
     "ELISE2006": {
-    "duration_str": "PERM_ADMIN",
-    "expires_at": null,
-    "claimed_by_device": null
+        "duration_str": "PERM_ADMIN",
+        "expires_at": null,
+        "claimed_by_device": "989847fa-934f-4ee3-b3a1-42c366350974"
     }
 }
