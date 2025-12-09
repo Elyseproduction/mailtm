@@ -1,6 +1,7 @@
 {
-    "ELISE": {
-    "duration_str": "PERM_ADMIN_LOCKED",
+    "ELISE2006": {
+    "duration_str": "PERM_ADMIN",
     "expires_at": null,
+    "claimed_by_device": null
     }
 }
