@@ -8,5 +8,10 @@
         "duration_str": "perm",
         "claimed_by_device": "79d49195-5865-4ada-bd9a-f5ca39afba4b",
         "expires_at": null
+    },
+    "LAfwOdI46x0F54Zc": {
+        "duration_str": "30min",
+        "claimed_by_device": null,
+        "expires_at": "2025-12-09T21:38:02.600145"
     }
 }
