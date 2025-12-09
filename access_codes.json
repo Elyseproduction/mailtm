@@ -11,7 +11,7 @@
     },
     "ZahGasy": {
         "duration_str": "perm",
-        "claimed_by_device": null,
+        "claimed_by_device": "1477865a-3fc9-45d4-93be-c1e4b7ba659e",
         "expires_at": null
     }
 }
