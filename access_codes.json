@@ -13,5 +13,10 @@
         "duration_str": "30min",
         "claimed_by_device": "51b889ca-8338-4254-9035-faba816a87b3",
         "expires_at": "2025-12-10T14:26:13.534914"
+    },
+    "Eezx2mlAiKlvwzle": {
+        "duration_str": "1min",
+        "claimed_by_device": null,
+        "expires_at": "2025-12-10T14:35:04.801368"
     }
 }
