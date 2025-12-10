@@ -10,5 +10,10 @@
         "duration_str": "Permanent",
         "claimed_by_device": "79d49195-5865-4ada-bd9a-f5ca39afba4b",
         "claimed_at": null
+    },
+    "ZahBoss": {
+        "duration_str": "perm",
+        "claimed_by_device": null,
+        "expires_at": null
     }
 }
