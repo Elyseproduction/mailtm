@@ -13,7 +13,7 @@
     },
     "ZahBoss": {
         "duration_str": "perm",
-        "claimed_by_device": null,
+        "claimed_by_device": "105875fb-06c4-4689-98b3-2d19a228234e",
         "expires_at": null
     }
 }
