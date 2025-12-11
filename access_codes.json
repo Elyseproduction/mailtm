@@ -7,7 +7,11 @@
     "ZahGasy": {
         "duration_str": "4min",
         "claimed_by_device": "79d49195-5865-4ada-bd9a-f5ca39afba4b",
-        "expires_at": "2025-12-11T08:40:16.088636"
+        "expires_at": "2025-12-11T08:40:16.088636",
+        "expiry_date": "2025-12-11 12:21:38",
+        "creation_date": "UNKNOWN",
+        "duration": "UNKNOWN",
+        "claimed_by": "Non r\u00e9clam\u00e9"
     },
     "Theodose": {
         "duration_str": "0min",
