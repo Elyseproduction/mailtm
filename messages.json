@@ -171,5 +171,96 @@
         "received": "2025-12-11 13:07:43",
         "body": "Mvola a envoyer 1 000 Ar. Ref: 125645876",
         "_id": 1098
+    },
+    {
+        "threadid": 14,
+        "type": "sent",
+        "read": true,
+        "sender": "You",
+        "address": "+261 38 89 020 76",
+        "number": "+261 38 89 020 76",
+        "received": "2025-12-11 19:56:17",
+        "body": "Andifas 2toi ndrek edy",
+        "_id": 1102
+    },
+    {
+        "threadid": 56,
+        "type": "inbox",
+        "read": true,
+        "address": "MVola",
+        "number": "MVola",
+        "received": "2025-12-11 19:56:57",
+        "body": "Votre solde MVola est insuffisant. Votre solde est de 144 Ar. Faites un depot MVola suffisant pour pouvoir effectuer cette transaction. Ref: 710178813",
+        "_id": 1103
+    },
+    {
+        "threadid": 56,
+        "type": "inbox",
+        "read": true,
+        "address": "MVola",
+        "number": "MVola",
+        "received": "2025-12-11 19:57:12",
+        "body": "Achat de credit Yas reussi: 100 Ar. Bonus: 20 pourcent sur ce dernier rechargement. Solde MVola: 44 Ar. Ref: 710186208",
+        "_id": 1104
+    },
+    {
+        "threadid": 56,
+        "type": "inbox",
+        "read": true,
+        "address": "MVola",
+        "number": "MVola",
+        "received": "2025-12-11 19:57:22",
+        "body": "Le 11/12/25 a 19:56 votre solde MVola est de 144 Ar. Rechargez votre compte Yas via MVola et gagnez un bonus immediat de 20 pourcent. Ref: 710178821",
+        "_id": 1105
+    },
+    {
+        "threadid": 57,
+        "type": "inbox",
+        "read": true,
+        "address": "Yas",
+        "number": "Yas",
+        "received": "2025-12-11 19:57:22",
+        "body": "Votre achat de l offre YELOW100 est r\u00e9ussi. Consultez vos bonus dans info conso via Yas&Moi ou sur #359#.",
+        "_id": 1106
+    },
+    {
+        "threadid": 60,
+        "type": "inbox",
+        "read": true,
+        "address": "2ToiAMoi",
+        "number": "2ToiAMoi",
+        "received": "2025-12-11 20:15:02",
+        "body": "11/12/25 20:15 Vous venez de recevoir 1 000Ar de 2Toi a Moi Vaovao. Votre nouveau solde est de 1 000Ar. Ref: 1904265080",
+        "_id": 1107
+    },
+    {
+        "threadid": 61,
+        "type": "inbox",
+        "read": true,
+        "address": "209",
+        "number": "209",
+        "received": "2025-12-11 20:35:23",
+        "body": "Votre offre Akama Full ne peut pas etre renouvelee car votre solde est insuffisant.Veuillez recharger votre compte principal",
+        "_id": 1108
+    },
+    {
+        "threadid": 73,
+        "type": "inbox",
+        "read": true,
+        "address": "+261347077290",
+        "number": "+261347077290",
+        "received": "2025-12-11 20:48:29",
+        "body": "Azafady, mety nga lesi rah n'tansferko yellow m\u00e9ga 500 da vitaina agny instalation ty fa otran halaky hatory lesi iao tsy handriko am 23h zany",
+        "_id": 1109
+    },
+    {
+        "threadid": 73,
+        "type": "inbox",
+        "read": true,
+        "address": "+261347077290",
+        "number": "+261347077290",
+        "received": "2025-12-11 20:53:54",
+        "body": "Vous avez recu l offre YELOW 500 venant du 0347077290. Vous avez 100 Mo utilisable a toute heure. Consultez vos bonus sur #359#.",
+        "_id": 1110
     }
 ]
