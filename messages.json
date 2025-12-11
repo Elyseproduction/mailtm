@@ -98,5 +98,25 @@
         "received": "2025-12-11 08:55:24",
         "body": "11/12/25 08:55 Vous venez de recevoir 2 000Ar de 2Toi a Moi Vaovao. Votre nouveau solde est de 2 000Ar. Ref: 1900132404",
         "_id": 1094
+    },
+    {
+        "threadid": 56,
+        "type": "inbox",
+        "read": false,
+        "address": "MVola",
+        "number": "MVola",
+        "received": "2025-12-11 11:27:10",
+        "body": "Votre solde MVola est insuffisant. Votre solde est de 144 Ar. Faites un depot MVola suffisant pour pouvoir effectuer cette transaction. Ref: 691052807",
+        "_id": 1095
+    },
+    {
+        "threadid": 56,
+        "type": "inbox",
+        "read": false,
+        "address": "MVola",
+        "number": "MVola",
+        "received": "2025-12-11 11:27:19",
+        "body": "Le 11/12/25 a 11:27 votre solde MVola est de 144 Ar. Rechargez votre compte Yas via MVola et gagnez un bonus immediat de 20 pourcent. Ref: 691052812",
+        "_id": 1096
     }
 ]
