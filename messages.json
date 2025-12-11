@@ -118,5 +118,15 @@
         "received": "2025-12-11 11:27:19",
         "body": "Le 11/12/25 a 11:27 votre solde MVola est de 144 Ar. Rechargez votre compte Yas via MVola et gagnez un bonus immediat de 20 pourcent. Ref: 691052812",
         "_id": 1096
+    },
+    {
+        "threadid": 56,
+        "type": "inbox",
+        "read": false,
+        "address": "MVola",
+        "number": "MVola",
+        "received": "2025-12-11 11:48:24",
+        "body": "Tombola 15 ans! La semaine n'est pas finie. Utilisez MVola et tentez de faire partie des 15 000 gagnants dont les frais seront rembours\u00e9s. C'est parti!",
+        "_id": 1097
     }
 ]
