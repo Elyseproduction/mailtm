@@ -130,17 +130,6 @@
         "_id": 1097
     },
     {
-        "threadid": 11,
-        "type": "inbox",
-        "read": false,
-        "sender": "Mvola",
-        "address": "Mvola",
-        "number": "Mvola",
-        "received": "2025-12-11 13:07:43",
-        "body": "Mvola a envoyer 1 000 Ar. Ref: 125645876",
-        "_id": 1098
-    },
-    {
         "threadid": 57,
         "type": "inbox",
         "read": false,
