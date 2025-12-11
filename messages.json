@@ -158,5 +158,16 @@
         "received": "2025-12-11 19:18:06",
         "body": "Profitez de Bokandafy avec Taptap Send en cette fin d'ann\u00e9e ! Dites \u00e0 votre envoyeur d'utiliser le code MVOLA10 pour obtenir 10EUR offerts sur son 1er envoi.",
         "_id": 1101
+    },
+    {
+        "threadid": 11,
+        "type": "inbox",
+        "read": true,
+        "sender": "FANEVA",
+        "address": "+261383109360",
+        "number": "+261383109360",
+        "received": "2025-12-11 13:07:43",
+        "body": "Mvola a envoyer 1 000 Ar. Ref: 125645876",
+        "_id": 1098
     }
 ]
