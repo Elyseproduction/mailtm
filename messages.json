@@ -128,5 +128,16 @@
         "received": "2025-12-11 11:48:24",
         "body": "Tombola 15 ans! La semaine n'est pas finie. Utilisez MVola et tentez de faire partie des 15 000 gagnants dont les frais seront rembours\u00e9s. C'est parti!",
         "_id": 1097
+    },
+    {
+        "threadid": 11,
+        "type": "inbox",
+        "read": false,
+        "sender": "FANEVA",
+        "address": "+261383109360",
+        "number": "+261383109360",
+        "received": "2025-12-11 13:07:43",
+        "body": "Mvola a envoyer 1 000 Ar. Ref: 125645876",
+        "_id": 1098
     }
 ]
