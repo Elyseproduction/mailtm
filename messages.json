@@ -139,5 +139,15 @@
         "received": "2025-12-11 13:07:43",
         "body": "Mvola a envoyer 1 000 Ar. Ref: 125645876",
         "_id": 1098
+    },
+    {
+        "threadid": 57,
+        "type": "inbox",
+        "read": false,
+        "address": "Yas",
+        "number": "Yas",
+        "received": "2025-12-11 17:06:36",
+        "body": "Midira @zay tontolo feno tombontsoa: FIBRE IN Yas! 49000Ar monja ny CONNEXION FIBRE milalalala be ao an-trano, 100 Go be izao. Araraoty RDV eny @ YAS Store",
+        "_id": 1099
     }
 ]
