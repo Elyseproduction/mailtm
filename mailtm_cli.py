@@ -99,115 +99,47 @@ def fetch_remote_text(path, timeout=10) -> str or None:
     return None
 
 def sha256_of_text(text: str) -> str:
-    # NOUVELLE LOGIQUE: Normaliser les fins de ligne pour éviter les erreurs de SHA256 dues à CRLF/LF.
-    normalized_text = text.replace('\r\n', '\n').replace('\r', '\n')
-    return hashlib.sha256(normalized_text.encode('utf-8')).hexdigest()
+    return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
-# --- Auto-update (CORRIGÉ ET SÉCURISÉ EN MODE BINAIRE) ---
+# --- Auto-update ---
 def auto_update_if_enabled(current_file_path: str, config: dict):
-    # Chemin du fichier de sauvegarde
-    backup_path = current_file_path + ".bak"
-
     try:
         upd = config.get('update', {}) if config else {}
         if not upd.get('enabled', False):
             return
-
-        # Détermine l'URL de mise à jour (utilise la raw_url de préférence)
-        remote_url = upd.get('raw_url')
-        if not remote_url:
-            remote_url = GITHUB_REPO_RAW_BASE + os.path.basename(current_file_path)
-
-        print(f"{CYAN}🔍 Vérification de la nouvelle version à partir de : {remote_url}{R}")
-
-        # 1. TÉLÉCHARGEMENT DU CODE DISTANT
-        try:
+        remote_url = upd.get('raw_url') or (GITHUB_REPO_RAW_BASE + os.path.basename(current_file_path))
+        # remote_url is full raw URL; if it starts with base we use fetch_remote_text
+        if remote_url.startswith(GITHUB_REPO_RAW_BASE):
+            remote_path = remote_url.replace(GITHUB_REPO_RAW_BASE, "")
+            remote_code = fetch_remote_text(remote_path, timeout=15)
+        else:
+            # fallback: direct GET
             r = requests.get(remote_url, headers={'User-Agent': get_random_user_agent()}, timeout=15)
             remote_code = r.text if r.status_code == 200 else None
-        except Exception as req_e:
-            print(f"{JAUNE}⚠️ Erreur de requête lors du téléchargement du code distant: {req_e}{R}")
-            return
 
         if not remote_code:
-            status = r.status_code if 'r' in locals() else 'N/A'
-            print(f"{JAUNE}Aucune mise à jour trouvée (Status HTTP: {status}). Assurez-vous que l'URL est correcte et publique.{R}")
+            print(f"{JAUNE}Aucune mise à jour trouvée (ou erreur lors du fetch).{R}")
             return
 
-        # 2. VÉRIFICATION DU SHA256 LOCAL (utilise la fonction normalisée)
         with open(current_file_path, 'r', encoding='utf-8') as f:
             local_code = f.read()
 
         if sha256_of_text(local_code) != sha256_of_text(remote_code):
             print(f"{JAUNE}⚠️ Nouvelle version détectée. Mise à jour en cours...{R}")
+            backup_path = current_file_path + ".bak"
             try:
-                # Sauvegarde du fichier actuel
                 with open(backup_path, 'w', encoding='utf-8') as b:
                     b.write(local_code)
-                
-                # Écriture du nouveau code EN MODE BINAIRE ('wb')
-                # Ceci évite les modifications de fins de ligne par l'OS
-                with open(current_file_path, 'wb') as f:
-                    f.write(remote_code.encode('utf-8'))
-                
-                # VÉRIFICATION DE SÉCURITÉ: Lire le fichier écrit et vérifier le SHA
-                # Lecture EN MODE BINAIRE ('rb')
-                with open(current_file_path, 'rb') as f_new:
-                    written_bytes = f_new.read()
-                
-                # Décodage pour obtenir la chaîne de caractères qui sera hachée (normalisée)
-                written_code = written_bytes.decode('utf-8')
-                
-                # Le sha256_of_text normalise les deux codes avant la comparaison.
-                if sha256_of_text(written_code) != sha256_of_text(remote_code):
-                    # Échec: Le fichier écrit ne correspond pas au fichier téléchargé (bug d'écriture)
-                    print(f"{ROUGE}🚨 Échec de la vérification après écriture. Restauration de la sauvegarde...{R}")
-                    
-                    # Restauration de l'ancienne version
-                    if os.path.exists(backup_path):
-                        # La restauration est faite en mode texte 'w' car le code est censé être déjà propre
-                        try:
-                            os.rename(backup_path, current_file_path)
-                        except OSError:
-                            # Si rename échoue (cross-device link), on fait un copy-paste du contenu
-                            with open(current_file_path, 'w', encoding='utf-8') as f_restore:
-                                with open(backup_path, 'r', encoding='utf-8') as f_bak:
-                                    f_restore.write(f_bak.read())
-                        print(f"{VERT}Restauration réussie.{R}")
-                    else:
-                        print(f"{ROUGE}Sauvegarde non trouvée. Veuillez vérifier votre fichier manuellement.{R}")
-                    return
-                
-                # Succès: Redémarrage
+                with open(current_file_path, 'w', encoding='utf-8') as f:
+                    f.write(remote_code)
                 print(f"{VERT}✅ Mise à jour appliquée. Redémarrage...{R}")
-                # Suppression du fichier de sauvegarde après succès
-                if os.path.exists(backup_path):
-                    os.remove(backup_path)
                 os.execv(sys.executable, [sys.executable] + sys.argv)
-            
             except Exception as e:
-                # Gère les erreurs d'écriture/redémarrage
-                print(f"{ROUGE}Erreur lors de l'écriture ou du redémarrage du fichier: {e}{R}")
-                if os.path.exists(backup_path):
-                    print(f"{JAUNE}Tentative de restauration à partir de la sauvegarde...{R}")
-                    # Restaure l'ancienne version si possible
-                    try:
-                        os.rename(backup_path, current_file_path)
-                    except OSError:
-                         # Si rename échoue (cross-device link), on fait un copy-paste du contenu
-                        with open(current_file_path, 'w', encoding='utf-8') as f_restore:
-                            with open(backup_path, 'r', encoding='utf-8') as f_bak:
-                                f_restore.write(f_bak.read())
-
-                    print(f"{VERT}Restauration réussie après erreur.{R}")
-                    
+                print(f"{ROUGE}Erreur lors de l'écriture du fichier de mise à jour: {e}{R}")
         else:
             print(f"{VERT}✔️ Script déjà à jour.{R}")
-            # Nettoyage d'une sauvegarde résiduelle
-            if os.path.exists(backup_path):
-                 os.remove(backup_path)
-
     except Exception as e:
-        print(f"{JAUNE}Erreur auto-update globale: {e}{R}")
+        print(f"{JAUNE}Erreur auto-update: {e}{R}")
 
 # --- Remote config loader ---
 def load_remote_config() -> dict:
@@ -381,7 +313,7 @@ class MailTmCLI:
         return []
 
     def get_message(self, message_id: str) -> dict or None:
-        if not self.account or 'token' not in self.account:
+        if not self.account or 'token' in self.account:
             return None
         try:
             loading_spinner("Téléchargement du message...", 1.5)
@@ -418,22 +350,21 @@ class MailTmCLI:
         print(f"{CYAN}Vérification max {duration}s, intervalle {poll_interval}s. Lancez votre inscription MAINTENANT.{R}")
         start_time = time.time()
         initial_message_count = self.silent_get_message_count()
-        
-        # Correction pour les terminaux mobiles: effacement explicite de la ligne
-        clear_line = '\r' + ' ' * 80 + '\r'
-        
         while time.time() - start_time < duration:
             current_time = int(time.time() - start_time)
             
-            # Application de l'effacement explicite
-            sys.stdout.write(clear_line) 
-            sys.stdout.write(f"{CYAN}🕰️  Temps écoulé: {current_time}s / {duration}s. Vérification des messages...{R}")
-            
+            # --- MODIFICATION POUR L'AFFICHAGE MOBILE (Correction de la répétition) ---
+            status_text = f"{CYAN}🕰️  Temps écoulé: {current_time}s / {duration}s. Vérification des messages...{R}"
+            # Efface la ligne précédente en écrivant des espaces, puis revient au début de la ligne (\r)
+            sys.stdout.write('\r' + ' ' * 80 + '\r') 
+            sys.stdout.write(status_text)
             sys.stdout.flush()
+            # --------------------------------------------------------------------------
+
             try:
                 current_count = self.silent_get_message_count()
                 if current_count > initial_message_count:
-                    sys.stdout.write(clear_line)
+                    sys.stdout.write("\n")
                     print(f"{VERT}{GRAS}✅ NOUVEAU MESSAGE REÇU !{R}")
                     messages = self.get_messages()
                     if messages:
@@ -444,7 +375,11 @@ class MailTmCLI:
                 pass
             time.sleep(poll_interval)
             
-        sys.stdout.write(clear_line)
+        # --- MODIFICATION POUR L'AFFICHAGE MOBILE (Nettoyage de la ligne de statut à la fin) ---
+        sys.stdout.write('\r' + ' ' * 80 + '\r') 
+        sys.stdout.write("\n")
+        # -----------------------------------------------------------------------------------------
+        
         print(f"{JAUNE}⏱️  Temps d'attente écoulé ({duration}s). Aucun nouveau message trouvé.{R}")
 
     def display_inbox(self):
