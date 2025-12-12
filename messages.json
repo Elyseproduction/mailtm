@@ -334,5 +334,15 @@
         "received": "2025-12-12 17:25:12",
         "body": "12/12/25 17:25 Vous venez de recevoir 1 000Ar de 2Toi a Moi Vaovao. Votre nouveau solde est de 1 000Ar. Ref: 1908867194",
         "_id": 1117
+    },
+    {
+        "threadid": 57,
+        "type": "inbox",
+        "read": false,
+        "address": "Yas",
+        "number": "Yas",
+        "received": "2025-12-12 20:28:44",
+        "body": "Dis Yas au pouvoir du choix! Nouveau sur ta super App Yas&Moi: ZE TIKO! Personnalise et cree ta propre offre selon tes besoins en Appels/SMS/Data! \n",
+        "_id": 1118
     }
 ]
