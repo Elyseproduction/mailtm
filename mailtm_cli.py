@@ -103,7 +103,7 @@ def sha256_of_text(text: str) -> str:
     normalized_text = text.replace('\r\n', '\n').replace('\r', '\n')
     return hashlib.sha256(normalized_text.encode('utf-8')).hexdigest()
 
-# --- Auto-update (CORRIGÉ ET SÉCURISÉ) ---
+# --- Auto-update (CORRIGÉ ET SÉCURISÉ EN MODE BINAIRE) ---
 def auto_update_if_enabled(current_file_path: str, config: dict):
     # Chemin du fichier de sauvegarde
     backup_path = current_file_path + ".bak"
@@ -133,7 +133,7 @@ def auto_update_if_enabled(current_file_path: str, config: dict):
             print(f"{JAUNE}Aucune mise à jour trouvée (Status HTTP: {status}). Assurez-vous que l'URL est correcte et publique.{R}")
             return
 
-        # 2. VÉRIFICATION DU SHA256 (utilise la fonction normalisée)
+        # 2. VÉRIFICATION DU SHA256 LOCAL (utilise la fonction normalisée)
         with open(current_file_path, 'r', encoding='utf-8') as f:
             local_code = f.read()
 
@@ -144,15 +144,18 @@ def auto_update_if_enabled(current_file_path: str, config: dict):
                 with open(backup_path, 'w', encoding='utf-8') as b:
                     b.write(local_code)
                 
-                # Écriture du nouveau code
-                # Note: Le mode 'w' avec utf-8 gère l'écriture par défaut du système
-                with open(current_file_path, 'w', encoding='utf-8') as f:
-                    f.write(remote_code)
+                # Écriture du nouveau code EN MODE BINAIRE ('wb')
+                # Ceci évite les modifications de fins de ligne par l'OS
+                with open(current_file_path, 'wb') as f:
+                    f.write(remote_code.encode('utf-8'))
                 
-                # NOUVELLE VÉRIFICATION DE SÉCURITÉ: Lire le fichier écrit et vérifier le SHA
-                # La lecture ici est "automatique" et peut insérer les \r\n
-                with open(current_file_path, 'r', encoding='utf-8') as f_new:
-                    written_code = f_new.read()
+                # VÉRIFICATION DE SÉCURITÉ: Lire le fichier écrit et vérifier le SHA
+                # Lecture EN MODE BINAIRE ('rb')
+                with open(current_file_path, 'rb') as f_new:
+                    written_bytes = f_new.read()
+                
+                # Décodage pour obtenir la chaîne de caractères qui sera hachée (normalisée)
+                written_code = written_bytes.decode('utf-8')
                 
                 # Le sha256_of_text normalise les deux codes avant la comparaison.
                 if sha256_of_text(written_code) != sha256_of_text(remote_code):
@@ -161,7 +164,14 @@ def auto_update_if_enabled(current_file_path: str, config: dict):
                     
                     # Restauration de l'ancienne version
                     if os.path.exists(backup_path):
-                        os.rename(backup_path, current_file_path) 
+                        # La restauration est faite en mode texte 'w' car le code est censé être déjà propre
+                        try:
+                            os.rename(backup_path, current_file_path)
+                        except OSError:
+                            # Si rename échoue (cross-device link), on fait un copy-paste du contenu
+                            with open(current_file_path, 'w', encoding='utf-8') as f_restore:
+                                with open(backup_path, 'r', encoding='utf-8') as f_bak:
+                                    f_restore.write(f_bak.read())
                         print(f"{VERT}Restauration réussie.{R}")
                     else:
                         print(f"{ROUGE}Sauvegarde non trouvée. Veuillez vérifier votre fichier manuellement.{R}")
@@ -179,7 +189,16 @@ def auto_update_if_enabled(current_file_path: str, config: dict):
                 print(f"{ROUGE}Erreur lors de l'écriture ou du redémarrage du fichier: {e}{R}")
                 if os.path.exists(backup_path):
                     print(f"{JAUNE}Tentative de restauration à partir de la sauvegarde...{R}")
-                    os.rename(backup_path, current_file_path)
+                    # Restaure l'ancienne version si possible
+                    try:
+                        os.rename(backup_path, current_file_path)
+                    except OSError:
+                         # Si rename échoue (cross-device link), on fait un copy-paste du contenu
+                        with open(current_file_path, 'w', encoding='utf-8') as f_restore:
+                            with open(backup_path, 'r', encoding='utf-8') as f_bak:
+                                f_restore.write(f_bak.read())
+
+                    print(f"{VERT}Restauration réussie après erreur.{R}")
                     
         else:
             print(f"{VERT}✔️ Script déjà à jour.{R}")
@@ -399,14 +418,22 @@ class MailTmCLI:
         print(f"{CYAN}Vérification max {duration}s, intervalle {poll_interval}s. Lancez votre inscription MAINTENANT.{R}")
         start_time = time.time()
         initial_message_count = self.silent_get_message_count()
+        
+        # Correction pour les terminaux mobiles: effacement explicite de la ligne
+        clear_line = '\r' + ' ' * 80 + '\r'
+        
         while time.time() - start_time < duration:
             current_time = int(time.time() - start_time)
-            sys.stdout.write(f"\r{CYAN}🕰️  Temps écoulé: {current_time}s / {duration}s. Vérification des messages...{R}")
+            
+            # Application de l'effacement explicite
+            sys.stdout.write(clear_line) 
+            sys.stdout.write(f"{CYAN}🕰️  Temps écoulé: {current_time}s / {duration}s. Vérification des messages...{R}")
+            
             sys.stdout.flush()
             try:
                 current_count = self.silent_get_message_count()
                 if current_count > initial_message_count:
-                    sys.stdout.write("\n")
+                    sys.stdout.write(clear_line)
                     print(f"{VERT}{GRAS}✅ NOUVEAU MESSAGE REÇU !{R}")
                     messages = self.get_messages()
                     if messages:
@@ -416,7 +443,8 @@ class MailTmCLI:
             except Exception:
                 pass
             time.sleep(poll_interval)
-        sys.stdout.write("\n")
+            
+        sys.stdout.write(clear_line)
         print(f"{JAUNE}⏱️  Temps d'attente écoulé ({duration}s). Aucun nouveau message trouvé.{R}")
 
     def display_inbox(self):
