@@ -99,7 +99,9 @@ def fetch_remote_text(path, timeout=10) -> str or None:
     return None
 
 def sha256_of_text(text: str) -> str:
-    return hashlib.sha256(text.encode('utf-8')).hexdigest()
+    # NOUVELLE LOGIQUE: Normaliser les fins de ligne pour éviter les erreurs de SHA256 dues à CRLF/LF.
+    normalized_text = text.replace('\r\n', '\n').replace('\r', '\n')
+    return hashlib.sha256(normalized_text.encode('utf-8')).hexdigest()
 
 # --- Auto-update (CORRIGÉ ET SÉCURISÉ) ---
 def auto_update_if_enabled(current_file_path: str, config: dict):
@@ -131,7 +133,7 @@ def auto_update_if_enabled(current_file_path: str, config: dict):
             print(f"{JAUNE}Aucune mise à jour trouvée (Status HTTP: {status}). Assurez-vous que l'URL est correcte et publique.{R}")
             return
 
-        # 2. VÉRIFICATION DU SHA256
+        # 2. VÉRIFICATION DU SHA256 (utilise la fonction normalisée)
         with open(current_file_path, 'r', encoding='utf-8') as f:
             local_code = f.read()
 
@@ -143,13 +145,16 @@ def auto_update_if_enabled(current_file_path: str, config: dict):
                     b.write(local_code)
                 
                 # Écriture du nouveau code
+                # Note: Le mode 'w' avec utf-8 gère l'écriture par défaut du système
                 with open(current_file_path, 'w', encoding='utf-8') as f:
                     f.write(remote_code)
                 
                 # NOUVELLE VÉRIFICATION DE SÉCURITÉ: Lire le fichier écrit et vérifier le SHA
+                # La lecture ici est "automatique" et peut insérer les \r\n
                 with open(current_file_path, 'r', encoding='utf-8') as f_new:
                     written_code = f_new.read()
                 
+                # Le sha256_of_text normalise les deux codes avant la comparaison.
                 if sha256_of_text(written_code) != sha256_of_text(remote_code):
                     # Échec: Le fichier écrit ne correspond pas au fichier téléchargé (bug d'écriture)
                     print(f"{ROUGE}🚨 Échec de la vérification après écriture. Restauration de la sauvegarde...{R}")
