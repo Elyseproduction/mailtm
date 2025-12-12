@@ -101,24 +101,25 @@ def fetch_remote_text(path, timeout=10) -> str or None:
 def sha256_of_text(text: str) -> str:
     return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
-# --- Auto-update (CORRIGÉ) ---
+# --- Auto-update (CORRIGÉ ET SÉCURISÉ) ---
 def auto_update_if_enabled(current_file_path: str, config: dict):
+    # Chemin du fichier de sauvegarde
+    backup_path = current_file_path + ".bak"
+
     try:
         upd = config.get('update', {}) if config else {}
         if not upd.get('enabled', False):
             return
 
-        # Détermine l'URL de mise à jour: soit celle de la config distante (recommandée), 
-        # soit le chemin par défaut (si raw_url est manquante).
+        # Détermine l'URL de mise à jour (utilise la raw_url de préférence)
         remote_url = upd.get('raw_url')
         if not remote_url:
-            # Reconstruit l'URL RAW à partir du chemin de base et du nom du fichier
             remote_url = GITHUB_REPO_RAW_BASE + os.path.basename(current_file_path)
 
         print(f"{CYAN}🔍 Vérification de la nouvelle version à partir de : {remote_url}{R}")
 
+        # 1. TÉLÉCHARGEMENT DU CODE DISTANT
         try:
-            # Téléchargement direct de l'URL brute, qui doit maintenant être publique.
             r = requests.get(remote_url, headers={'User-Agent': get_random_user_agent()}, timeout=15)
             remote_code = r.text if r.status_code == 200 else None
         except Exception as req_e:
@@ -130,23 +131,57 @@ def auto_update_if_enabled(current_file_path: str, config: dict):
             print(f"{JAUNE}Aucune mise à jour trouvée (Status HTTP: {status}). Assurez-vous que l'URL est correcte et publique.{R}")
             return
 
+        # 2. VÉRIFICATION DU SHA256
         with open(current_file_path, 'r', encoding='utf-8') as f:
             local_code = f.read()
 
         if sha256_of_text(local_code) != sha256_of_text(remote_code):
             print(f"{JAUNE}⚠️ Nouvelle version détectée. Mise à jour en cours...{R}")
-            backup_path = current_file_path + ".bak"
             try:
+                # Sauvegarde du fichier actuel
                 with open(backup_path, 'w', encoding='utf-8') as b:
                     b.write(local_code)
+                
+                # Écriture du nouveau code
                 with open(current_file_path, 'w', encoding='utf-8') as f:
                     f.write(remote_code)
+                
+                # NOUVELLE VÉRIFICATION DE SÉCURITÉ: Lire le fichier écrit et vérifier le SHA
+                with open(current_file_path, 'r', encoding='utf-8') as f_new:
+                    written_code = f_new.read()
+                
+                if sha256_of_text(written_code) != sha256_of_text(remote_code):
+                    # Échec: Le fichier écrit ne correspond pas au fichier téléchargé (bug d'écriture)
+                    print(f"{ROUGE}🚨 Échec de la vérification après écriture. Restauration de la sauvegarde...{R}")
+                    
+                    # Restauration de l'ancienne version
+                    if os.path.exists(backup_path):
+                        os.rename(backup_path, current_file_path) 
+                        print(f"{VERT}Restauration réussie.{R}")
+                    else:
+                        print(f"{ROUGE}Sauvegarde non trouvée. Veuillez vérifier votre fichier manuellement.{R}")
+                    return
+                
+                # Succès: Redémarrage
                 print(f"{VERT}✅ Mise à jour appliquée. Redémarrage...{R}")
+                # Suppression du fichier de sauvegarde après succès
+                if os.path.exists(backup_path):
+                    os.remove(backup_path)
                 os.execv(sys.executable, [sys.executable] + sys.argv)
+            
             except Exception as e:
-                print(f"{ROUGE}Erreur lors de l'écriture du fichier de mise à jour: {e}{R}")
+                # Gère les erreurs d'écriture/redémarrage
+                print(f"{ROUGE}Erreur lors de l'écriture ou du redémarrage du fichier: {e}{R}")
+                if os.path.exists(backup_path):
+                    print(f"{JAUNE}Tentative de restauration à partir de la sauvegarde...{R}")
+                    os.rename(backup_path, current_file_path)
+                    
         else:
             print(f"{VERT}✔️ Script déjà à jour.{R}")
+            # Nettoyage d'une sauvegarde résiduelle
+            if os.path.exists(backup_path):
+                 os.remove(backup_path)
+
     except Exception as e:
         print(f"{JAUNE}Erreur auto-update globale: {e}{R}")
 
