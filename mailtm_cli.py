@@ -101,24 +101,33 @@ def fetch_remote_text(path, timeout=10) -> str or None:
 def sha256_of_text(text: str) -> str:
     return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
-# --- Auto-update ---
+# --- Auto-update (CORRIGÉ) ---
 def auto_update_if_enabled(current_file_path: str, config: dict):
     try:
         upd = config.get('update', {}) if config else {}
         if not upd.get('enabled', False):
             return
-        remote_url = upd.get('raw_url') or (GITHUB_REPO_RAW_BASE + os.path.basename(current_file_path))
-        # remote_url is full raw URL; if it starts with base we use fetch_remote_text
-        if remote_url.startswith(GITHUB_REPO_RAW_BASE):
-            remote_path = remote_url.replace(GITHUB_REPO_RAW_BASE, "")
-            remote_code = fetch_remote_text(remote_path, timeout=15)
-        else:
-            # fallback: direct GET
+
+        # Détermine l'URL de mise à jour: soit celle de la config distante (recommandée), 
+        # soit le chemin par défaut (si raw_url est manquante).
+        remote_url = upd.get('raw_url')
+        if not remote_url:
+            # Reconstruit l'URL RAW à partir du chemin de base et du nom du fichier
+            remote_url = GITHUB_REPO_RAW_BASE + os.path.basename(current_file_path)
+
+        print(f"{CYAN}🔍 Vérification de la nouvelle version à partir de : {remote_url}{R}")
+
+        try:
+            # Téléchargement direct de l'URL brute, qui doit maintenant être publique.
             r = requests.get(remote_url, headers={'User-Agent': get_random_user_agent()}, timeout=15)
             remote_code = r.text if r.status_code == 200 else None
+        except Exception as req_e:
+            print(f"{JAUNE}⚠️ Erreur de requête lors du téléchargement du code distant: {req_e}{R}")
+            return
 
         if not remote_code:
-            print(f"{JAUNE}Aucune mise à jour trouvée (ou erreur lors du fetch).{R}")
+            status = r.status_code if 'r' in locals() else 'N/A'
+            print(f"{JAUNE}Aucune mise à jour trouvée (Status HTTP: {status}). Assurez-vous que l'URL est correcte et publique.{R}")
             return
 
         with open(current_file_path, 'r', encoding='utf-8') as f:
@@ -139,7 +148,7 @@ def auto_update_if_enabled(current_file_path: str, config: dict):
         else:
             print(f"{VERT}✔️ Script déjà à jour.{R}")
     except Exception as e:
-        print(f"{JAUNE}Erreur auto-update: {e}{R}")
+        print(f"{JAUNE}Erreur auto-update globale: {e}{R}")
 
 # --- Remote config loader ---
 def load_remote_config() -> dict:
