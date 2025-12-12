@@ -1,16 +1,10 @@
 {
-  "features": {
-    "auto_update": true,
-    "remote_features": true,
-    "plugin_loader": true,
-    "polling": true
-  },
-  "plugins": [
-    "auto_skip.py",
-    "instagram_verifier.py"
-  ],
-  "update": {
-    "enabled": true,
-    "raw_url": "https://raw.githubusercontent.com/Elyseproduction/mailtm/main/mailtm_cli.py"
-  }
+    "update": {
+        "enabled": true,
+        "raw_url": "https://raw.githubusercontent.com/Elyseproduction/mailtm/main/mailtm_cli.py"
+    },
+    "features": {
+        "auto_update": true
+    },
+    "plugins": []
 }
