@@ -262,5 +262,46 @@
         "received": "2025-12-11 20:53:54",
         "body": "Vous avez recu l offre YELOW 500 venant du 0347077290. Vous avez 100 Mo utilisable a toute heure. Consultez vos bonus sur #359#.",
         "_id": 1110
+    },
+    {
+        "threadid": 14,
+        "type": "sent",
+        "read": true,
+        "sender": "You",
+        "address": "+261 38 89 020 76",
+        "number": "+261 38 89 020 76",
+        "received": "2025-12-12 10:53:59",
+        "body": "Andifas 2toi edy",
+        "_id": 1111
+    },
+    {
+        "threadid": 61,
+        "type": "inbox",
+        "read": true,
+        "address": "209",
+        "number": "209",
+        "received": "2025-12-12 11:12:52",
+        "body": "Votre offre Akama Full ne peut pas etre renouvelee car votre solde est insuffisant.Veuillez recharger votre compte principal",
+        "_id": 1112
+    },
+    {
+        "threadid": 60,
+        "type": "inbox",
+        "read": true,
+        "address": "2ToiAMoi",
+        "number": "2ToiAMoi",
+        "received": "2025-12-12 11:54:41",
+        "body": "12/12/25 11:54 Vous venez de recevoir 1 000Ar de 2Toi a Moi Vaovao. Votre nouveau solde est de 1 000Ar. Ref: 1916943195",
+        "_id": 1113
+    },
+    {
+        "threadid": 72,
+        "type": "inbox",
+        "read": false,
+        "address": "OrangePromo",
+        "number": "OrangePromo",
+        "received": "2025-12-12 11:58:36",
+        "body": "Kadoa niany f\u00f4!\nNiany 12 d\u00e9sambra, Bonus 25% isaka ny mivanga CREDIT @ carte.\nBonus Appel hikahiana Orange.\u00a0Mahadigny\u00a024ora",
+        "_id": 1114
     }
 ]
