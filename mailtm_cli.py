@@ -825,9 +825,24 @@ def main_cli():
             wait_for_input() # Ajouté pour maintenir l'affichage après le polling
 
         elif choice == '7':
+            # La fonction run_manual_update retourne True si une mise à jour a été appliquée et un redémarrage a été tenté
             cli.run_manual_update()
-            # Si l'update réussit, le script se redémarre (sys.exit)
-            # Sinon, on attend l'input pour revenir au menu
+            
+            # Après l'exécution de la mise à jour, nous ré-exécutons la vérification
+            # pour mettre à jour l'affichage de la notification dans le menu si le redémarrage échoue ou est annulé.
+            
+            # --- ACTUALISATION DU STATUT DE MISE À JOUR (si le redémarrage n'a pas eu lieu) ---
+            sys.stdout.write(f"{CYAN}Actualisation du statut de mise à jour...{R}")
+            sys.stdout.flush()
+            update_available = check_update_status(current_file_path)
+            cleanup_line()
+            
+            if update_available:
+                update_notification = f"{ROUGE}{GRAS}🔥 MISE À JOUR DISPONIBLE (Option 7) !{R}"
+            else:
+                update_notification = f"{VERT}Script à jour.{R}"
+            # ------------------------------------------------------------------------------------
+            
             wait_for_input()
 
         elif choice == '0':
@@ -859,3 +874,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print(f"\n{CYAN}Interruption par l'utilisateur. Sortie.{R}")
         sys.exit(0)
+
