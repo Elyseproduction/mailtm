@@ -695,7 +695,8 @@ def main_cli():
         print(f"{MAGENTA}{GRAS}4. Supprimer le compte local{R}")
         print(f"{BLEU}5. Vérifier/Actualiser les emails rapidement \n{refresh_note}{R}")
         print(f"{VERT}{GRAS}6. ⏳ Attendre automatiquement un email de vérification (Polling){R}")
-        print(f"{MAGENTA}{GRAS}7. 🔄 Vérifier/Installer la mise à jour du script{R}") # <--- OPTION 7
+        print(f"{MAGENTA}{GRAS}7. 🔄 Vérifier/Installer la mise à jour du script{R}")
+        print(f"{CYAN}{GRAS}8. 🔁 Actualiser le statut des mises à jour (Menu seul){R}")
 
         # Show plugin actions if any
         if cli.remote_plugins_actions:
@@ -776,6 +777,23 @@ def main_cli():
             # -----------------------------------------------
             
             wait_for_input()
+            
+        elif choice == '8'
+            sys.stdout.write(f"{CYAN}Vérification de l'état des mises à jour...{R}")
+            sys.stdout.flush()
+            time.sleep(1)
+            
+            update_available = check_update_status(current_file_path)
+            cleanup_line()
+            
+            if update_available:
+                update_notification = f"{ROUGE}{GRAS}🔥 MISE À JOUR DISPONIBLE (Option 7) !{R}"
+                print(f"{ROUGE}🚨 Une mise à jour est disponible ! Exécutez l'Option 7 pour l'appliquer.{R}")
+            else:
+                update_notification = f"{VERT}Script à jour.{R}"
+                print(f"{VERT}✅ Le statut du script est mis à jour. Aucune action n'est requise.{R}")
+            
+            time.sleep(2)
 
         elif choice == '0':
             print(f"{CYAN}Au revoir ! Merci d'utiliser Mail.tm CLI.{R}")
@@ -805,6 +823,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print(f"\n{CYAN}Interruption par l'utilisateur. Sortie.{R}")
         sys.exit(0)
+
 
 
 
