@@ -1,4 +1,4 @@
-# mailtm_cli.py (Version Finale avec Mise à Jour UNIQUEMENT Manuelle (Option 7) et Affichage Corrigé + Notification MAJ Fiable)
+# mailtm_cli.py (Version Finale avec Mise à Jour Corrigée en Mode Binaire)
 
 import json
 import os
@@ -25,7 +25,6 @@ except ImportError:
 # Importation du module de gestion des accès DISTANT
 try:
     # L'importation de cleanup_line prendra la version ANSI de access_manager.py
-    # Assurez-vous que access_manager.py contient ces fonctions :
     from access_manager import AccessManager, loading_spinner, clear_screen, wait_for_input, cleanup_line 
 except ImportError:
     print("FATAL: Le fichier access_manager.py est manquant ou contient une erreur de syntaxe/indentation. Assurez-vous qu'il est présent et correct.")
@@ -96,10 +95,8 @@ def fetch_remote_text(path, timeout=10) -> str or None:
         if r.status_code == 200:
             return r.text
         else:
-            # print(f"{JAUNE}⚠️ Récupération remote {path} => status {r.status_code}{R}") # Commenté pour être discret
             pass
     except Exception:
-        # print(f"{JAUNE}⚠️ Erreur récupération remote {path}: {e}{R}") # Commenté pour être discret
         pass
     return None
 
@@ -219,10 +216,9 @@ class MailTmCLI:
             print(f"{ROUGE}Erreur lors de la sauvegarde de {ACCOUNT_FILE}: {e}{R}")
 
     def get_domains(self):
-        # ... (Fonction get_domains inchangée) ...
         try:
             loading_spinner("Contact API Mail.tm pour les domaines...", 3.0)
-            cleanup_line() # Nettoyage explicite après le spinner
+            cleanup_line() 
             headers = {'User-Agent': get_random_user_agent()}
             response = requests.get(f"{API_BASE}/domains", headers=headers, timeout=30)
             if response.status_code == 200:
@@ -239,16 +235,13 @@ class MailTmCLI:
             else:
                 print(f"{ROUGE}❌ Erreur API: Code de statut {response.status_code}. Vérifiez la connexion.{R}")
         except Exception as e:
-            # Erreur de connexion/timeout/etc.
             print(f"{ROUGE}❌ Erreur de connexion/timeout: {e}{R}")
         return []
 
-
     def login(self, email, password):
-        # ... (Fonction login inchangée) ...
         try:
             loading_spinner("Authentification en cours...", 1.5)
-            cleanup_line() # Nettoyage explicite après le spinner
+            cleanup_line() 
             headers = {'User-Agent': get_random_user_agent()}
             data = {"address": email, "password": password}
             response = requests.post(f"{API_BASE}/token", json=data, headers=headers, timeout=10)
@@ -259,7 +252,6 @@ class MailTmCLI:
         return None
 
     def create_account(self):
-        # ... (Fonction create_account inchangée) ...
         print(f"{JAUNE}🔍 Préparation de la création de compte...{R}")
         domains = self.get_domains()
         if not domains:
@@ -272,7 +264,7 @@ class MailTmCLI:
         data = {"address": email, "password": password}
         delay = random.uniform(1.5, 4.0)
         loading_spinner(f"Création de {email} (Attente : {delay:.1f}s)", delay)
-        cleanup_line() # Nettoyage explicite après le spinner
+        cleanup_line() 
         try:
             headers = {'User-Agent': get_random_user_agent()}
             response = requests.post(
@@ -298,13 +290,12 @@ class MailTmCLI:
         print(f"{ROUGE}❌ Échec de la création du compte.{R}")
 
     def get_messages(self) -> list:
-        # ... (Fonction get_messages inchangée) ...
         if not self.account or 'token' not in self.account:
             print(f"{JAUNE}⚠️ Erreur: Aucun jeton actif. Veuillez créer un compte d'abord.{R}")
             return []
         try:
             loading_spinner("Récupération des messages...", 2.0)
-            cleanup_line() # Nettoyage explicite après le spinner
+            cleanup_line() 
             headers = {"Authorization": f"Bearer {self.account['token']}", 'User-Agent': get_random_user_agent()}
             response = requests.get(f"{API_BASE}/messages", headers=headers, timeout=10)
             if response.status_code == 200:
@@ -318,12 +309,11 @@ class MailTmCLI:
         return []
 
     def get_message(self, message_id: str) -> dict or None:
-        # ... (Fonction get_message inchangée) ...
-        if not self.account or 'token' not in self.account: # Correction du bug: 'token' not in self.account est la condition correcte
+        if not self.account or 'token' not in self.account:
             return None
         try:
             loading_spinner("Téléchargement du message...", 1.5)
-            cleanup_line() # Nettoyage explicite après le spinner
+            cleanup_line() 
             headers = {"Authorization": f"Bearer {self.account['token']}", 'User-Agent': get_random_user_agent()}
             response = requests.get(
                 f"{API_BASE}/messages/{message_id}",
@@ -337,7 +327,6 @@ class MailTmCLI:
         return None
 
     def silent_get_message_count(self) -> int:
-        # ... (Fonction silent_get_message_count inchangée) ...
         if not self.account or 'token' not in self.account:
             return 0
         try:
@@ -351,7 +340,6 @@ class MailTmCLI:
         return 0
 
     def wait_for_message(self, duration=120, poll_interval=5):
-        # ... (Fonction wait_for_message inchangée) ...
         if not self.account or 'token' not in self.account:
             print(f"{ROUGE}❌ Aucun compte actif pour surveiller.{R}")
             return
@@ -364,7 +352,6 @@ class MailTmCLI:
         while time.time() - start_time < duration:
             current_time = int(time.time() - start_time)
             
-            # Utilise la fonction de nettoyage importée
             cleanup_line() 
             sys.stdout.write(f"{CYAN}🕰️  Temps écoulé: {current_time}s / {duration}s. Vérification des messages...{R}")
             sys.stdout.flush()
@@ -372,7 +359,6 @@ class MailTmCLI:
             try:
                 current_count = self.silent_get_message_count()
                 if current_count > initial_message_count:
-                    # Nettoyage avant le message de succès
                     cleanup_line() 
                     print(f"{VERT}{GRAS}✅ NOUVEAU MESSAGE REÇU !{R}")
                     messages = self.get_messages()
@@ -384,12 +370,10 @@ class MailTmCLI:
                 pass
             time.sleep(poll_interval)
             
-        # Nettoyage avant le message de timeout
         cleanup_line() 
         print(f"{JAUNE}⏱️  Temps d'attente écoulé ({duration}s). Aucun nouveau message trouvé.{R}")
 
     def display_inbox(self):
-        # ... (Fonction display_inbox inchangée) ...
         clear_screen()
         if not self.account:
             print(f"{JAUNE}⚠️ Aucun compte actif. Veuillez créer un compte (option 1).{R}")
@@ -413,7 +397,6 @@ class MailTmCLI:
             print("-" * 50)
 
     def display_message_content(self, msg_id: str):
-        # ... (Fonction display_message_content inchangée) ...
         clear_screen()
         if not msg_id:
             print(f"{ROUGE}❌ L'ID du message ne peut pas être vide.{R}")
@@ -456,7 +439,6 @@ class MailTmCLI:
         print("\n" + f"{BLEU}={R}" * 50)
 
     def check_new_messages(self) -> int:
-        # ... (Fonction check_new_messages inchangée) ...
         if not self.account or 'token' not in self.account:
             return 0
         try:
@@ -464,7 +446,7 @@ class MailTmCLI:
             time.sleep(3)
             clear_screen()
 
-            cleanup_line() # Nettoyage explicite après le spinner
+            cleanup_line() 
 
             headers = {"Authorization": f"Bearer {self.account['token']}", 'User-Agent': get_random_user_agent()}
             response = requests.get(f"{API_BASE}/messages", headers=headers, timeout=10)
@@ -475,9 +457,7 @@ class MailTmCLI:
             pass
         return 0
 
-    # --- Plugins: download + import + register ---
     def load_remote_plugins(self):
-        # ... (Fonction load_remote_plugins inchangée) ...
         cfg = self.remote_config or {}
         plugins = cfg.get('plugins', [])
         if not isinstance(plugins, list):
@@ -500,7 +480,7 @@ class MailTmCLI:
             except Exception as e:
                 print(f"{JAUNE}Erreur chargement plugin {plugin}: {e}{R}")
 
-    # --- MÉTHODE POUR L'OPTION 7 : MISE À JOUR MANUELLE (CORRIGÉE POUR FIABILITÉ DU HACHAGE) ---
+    # --- MÉTHODE POUR L'OPTION 7 : MISE À JOUR MANUELLE (CORRIGÉE AVEC ÉCRITURE BINAIRE) ---
     def run_manual_update(self):
         """Déclenche la vérification et l'application manuelle de la mise à jour."""
         print(f"\n{JAUNE}{GRAS}--- Démarrage de la vérification de mise à jour ---{R}")
@@ -521,6 +501,7 @@ class MailTmCLI:
                 print(f"{ROUGE}❌ Échec de la récupération du code distant. Vérifiez la connexion ou l'URL du dépôt.{R}")
                 return
             
+            # Utiliser le hash du code REMOTE tel quel (sans encodage, car fetch_remote_text donne une chaîne)
             remote_hash = sha256_of_text(remote_code)
             
             # 2. Récupération et hachage du code local
@@ -532,13 +513,11 @@ class MailTmCLI:
             if local_hash != remote_hash:
                 
                 cleanup_line() 
-                sys.stdout.write(f"{VERT}⚠️ Nouvelle version détectée (SHA local: {local_hash[:8]} | SHA remote: {remote_hash[:8]}). Application de la mise à jour...{R}")
-                sys.stdout.flush()
-                time.sleep(2.0) 
+                print(f"{VERT}⚠️ Nouvelle version détectée (SHA local: {local_hash[:8]} | SHA remote: {remote_hash[:8]}). Tentative d'application...{R}")
                 
                 backup_path = current_file_path + ".bak"
                 try:
-                    sys.stdout.write(f"{CYAN}Sauvegarde et écriture de la nouvelle version...{R}") 
+                    sys.stdout.write(f"{CYAN}Sauvegarde et écriture de la nouvelle version en mode binaire...{R}") 
                     sys.stdout.flush()                          
                     time.sleep(1.0) 
                     
@@ -546,21 +525,24 @@ class MailTmCLI:
                     with open(backup_path, 'w', encoding='utf-8') as b:
                         b.write(local_code)
                     
-                    # Écriture de la nouvelle version (IMPORTANT: forcer UTF-8)
-                    with open(current_file_path, 'w', encoding='utf-8') as f:
-                        f.write(remote_code)
+                    # --- Écriture en mode binaire pour éviter l'altération des fins de ligne ---
+                    remote_bytes = remote_code.encode('utf-8')
+                    with open(current_file_path, 'wb') as f:  # <<< Mode 'wb'
+                        f.write(remote_bytes)
                         
                     # --- VÉRIFICATION POST-ÉCRITURE ---
-                    # Re-lire le fichier que nous venons d'écrire pour vérifier l'intégrité
-                    with open(current_file_path, 'r', encoding='utf-8') as f_check:
-                        written_code = f_check.read()
+                    # Re-lire le fichier en mode binaire
+                    with open(current_file_path, 'rb') as f_check:  # <<< Mode 'rb'
+                        written_bytes = f_check.read()
                     
-                    written_hash = sha256_of_text(written_code)
+                    # Re-calculer le hash de la référence et du fichier écrit en bytes
+                    remote_hash_of_bytes = hashlib.sha256(remote_bytes).hexdigest()
+                    written_hash = hashlib.sha256(written_bytes).hexdigest()
+
                     
-                    if written_hash == remote_hash:
+                    if written_hash == remote_hash_of_bytes:
                         cleanup_line()
-                        # La mise à jour est vérifiée, nous tentons le redémarrage.
-                        sys.stdout.write(f"{VERT}✅ Mise à jour appliquée et vérifiée. Redémarrage dans 3 secondes...{R}")
+                        sys.stdout.write(f"{VERT}✅ Mise à jour appliquée et vérifiée (Mode Binaire OK). Redémarrage dans 3 secondes...{R}")
                         sys.stdout.flush()
                         time.sleep(3.0) 
                         
@@ -573,7 +555,7 @@ class MailTmCLI:
                             sys.exit(0)
                     else:
                         cleanup_line()
-                        print(f"{ROUGE}❌ ÉCHEC: Le fichier écrit n'est pas identique au fichier distant (Problème d'encodage/fin de ligne). Veuillez redémarrer manuellement. {R}")
+                        print(f"{ROUGE}❌ ÉCHEC CRITIQUE: Le fichier écrit est corrompu. Veuillez supprimer et retélécharger le script manuellement.{R}")
                         
                 except Exception as e:
                     cleanup_line()
@@ -593,30 +575,23 @@ def main_cli():
     clear_screen()
     print(f"{VERT}{GRAS}🤖 Mail.tm CLI - Gestion d'Email Temporaire (with Remote Control){R}")
 
-    # --- CHARGEMENT CONFIG DISTANTE ---
     remote_cfg = load_remote_config()
-
-    # --- CONTRÔLE D'ACCÈS DISTANT ---
     access_manager = AccessManager()
     device_id = get_or_create_device_id()
     cli = MailTmCLI(remote_config=remote_cfg)
-
-    # 🔑 CODE CLÉ ADMINISTRATEUR (Doit être PERMANENT sur GitHub)
     ADMIN_CODE = "ELISE2006"
 
     start_interface = False
     access_status_display = f"{JAUNE}Accès non validé.{R}"
 
-    # Recharge les codes pour être sûr d'avoir la dernière version avant de chercher l'accès existant
     access_manager.codes, access_manager.file_sha = access_manager.load_codes_from_github() 
     cleanup_line() 
 
     valid_access_code = None
 
-    # --- VERIFICATION DU STATUT DE MISE À JOUR AU DÉMARRAGE (Détermine la notification initiale) ---
+    # --- VERIFICATION DU STATUT DE MISE À JOUR AU DÉMARRAGE ---
     current_file_path = os.path.abspath(__file__)
     
-    # Spinner pour la vérification au démarrage (discrète)
     sys.stdout.write(f"{CYAN}Vérification de l'état des mises à jour...{R}")
     sys.stdout.flush()
     update_available = check_update_status(current_file_path)
@@ -626,7 +601,7 @@ def main_cli():
         update_notification = f"{ROUGE}{GRAS}🔥 MISE À JOUR DISPONIBLE (Option 7) !{R}"
     else:
         update_notification = f"{VERT}Script à jour.{R}"
-    # ---------------------------------------------------------------------------------------------
+    # ---------------------------------------------------------
 
     # --- GESTION DE L'ACCÈS INITIAL / RECONNEXION ---
     for code, data in access_manager.codes.items():
@@ -700,7 +675,6 @@ def main_cli():
         
         # --- AFFICHAGE DU STATUT DE MISE À JOUR DANS LE MENU ---
         print(f"{BLEU}||{R}{access_status_display}")
-        # Affiche la notification de mise à jour entre deux séparateurs
         print(f"{JAUNE}----------------------------------------------{R}") 
         print(f"{MAGENTA}|| {update_notification}") 
         print(CYAN + GRAS + "="*46 + R)
@@ -781,15 +755,12 @@ def main_cli():
             wait_for_input() 
 
         elif choice == '7':
-            # La fonction run_manual_update tente un redémarrage si succès.
             cli.run_manual_update()
             
-            # --- ACTUALISATION DU STATUT DE MISE À JOUR (si le redémarrage n'a pas eu lieu) ---
-            # Ceci met à jour l'affichage de la notification pour le menu courant
+            # --- ACTUALISATION DU STATUT DE MISE À JOUR ---
             sys.stdout.write(f"{CYAN}Actualisation du statut de mise à jour dans le menu...{R}")
             sys.stdout.flush()
             
-            # La variable 'current_file_path' est toujours valide
             update_available = check_update_status(current_file_path)
             cleanup_line()
             
@@ -797,7 +768,7 @@ def main_cli():
                 update_notification = f"{ROUGE}{GRAS}🔥 MISE À JOUR DISPONIBLE (Option 7) !{R}"
             else:
                 update_notification = f"{VERT}Script à jour.{R}"
-            # ------------------------------------------------------------------------------------
+            # -----------------------------------------------
             
             wait_for_input()
 
@@ -806,7 +777,6 @@ def main_cli():
             sys.exit(0)
 
         elif choice.isdigit() and int(choice) >= 10:
-            # Gestion des plugins
             plugin_index = int(choice) - 10
             if 0 <= plugin_index < len(cli.remote_plugins_actions):
                 title, func = cli.remote_plugins_actions[plugin_index]
