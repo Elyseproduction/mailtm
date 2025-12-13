@@ -13,10 +13,5 @@
         "duration_str": "4min",
         "claimed_by_device": "bfe830fa-871f-4d38-8ff2-944c3cb74e10",
         "expires_at": "2025-12-12T01:10:48.845138"
-    },
-    "Admin2025": {
-        "duration_str": "1h",
-        "claimed_by_device": "ee14d9bd-99e0-405f-b4b3-76308f97e377",
-        "expires_at": "2025-12-14T01:09:04.995434"
     }
 }
