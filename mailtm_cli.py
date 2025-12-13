@@ -809,3 +809,4 @@ if __name__ == '__main__':
         print(f"Veuillez installer les paquets requis via pip:")
         print("pip install requests html2text colorama")
         print(f"--------------------{R}\n")
+
