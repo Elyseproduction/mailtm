@@ -790,7 +790,7 @@ def main_cli():
                 update_notification = f"{ROUGE}{GRAS}🔥 MISE À JOUR DISPONIBLE (Option 7) !{R}"
                 print(f"{ROUGE}🚨 Une mise à jour est disponible ! Exécutez l'Option 7 pour l'appliquer{R}")
             else:
-                update_notification = f"{VERT}S c r i p t   à   j o u r{R}"
+                update_notification = f"{VERT}{GRAS}S C R I P T  À  J O U R{R}"
                 print(f"{VERT}✅ Le statut du script est mis à jour. Aucune action n'est requise{R}")
             
             time.sleep(3)
@@ -823,6 +823,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print(f"\n{CYAN}Interruption par l'utilisateur. Sortie.{R}")
         sys.exit(0)
+
 
 
 
