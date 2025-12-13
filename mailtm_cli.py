@@ -968,7 +968,9 @@ class MailTmCLI:
 
         try:
 
-            loading_spinner("Vérification rapide des nouveaux messages...", 1.0)
+            print("Vérification rapide des nouveaux messages...")
+            time.sleep(3)
+            clear_screen()
 
             cleanup_line() # Nettoyage explicite après le spinner
 
@@ -1617,6 +1619,7 @@ if __name__ == '__main__':
         print("pip install requests html2text colorama")
 
         print(f"--------------------{R}\n")
+
 
 
 
