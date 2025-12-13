@@ -1,4 +1,4 @@
-# mailtm_cli.py — Version avec mise à jour DISTANTE (OPTION MENU UNIQUEMENT)
+# mailtm_cli.py (Version Finale + Option Mise à jour DISTANTE)
 
 import json
 import os
@@ -14,12 +14,10 @@ import platform
 from requests.exceptions import ConnectionError, ReadTimeout
 
 # ===================== VERSION APP =====================
-
 APP_VERSION = "1.1.0"
 REMOTE_CONFIG_URL = "https://raw.githubusercontent.com/Elyseproduction/mailtm/main/remote_config.json"
 
 # ===================== COLORAMA =====================
-
 try:
     from colorama import init
     init(autoreset=True)
@@ -27,7 +25,6 @@ except ImportError:
     pass
 
 # ===================== IMPORTS LOCAUX =====================
-
 try:
     from access_manager import AccessManager, loading_spinner, clear_screen, wait_for_input
 except ImportError:
@@ -35,7 +32,6 @@ except ImportError:
     sys.exit(1)
 
 # ===================== CONSTANTES =====================
-
 API_BASE = "https://api.mail.tm"
 ACCOUNT_FILE = "mailtm_account.json"
 DEVICE_ID_FILE = "mailtm_device_id.txt"
@@ -43,18 +39,18 @@ MAX_DISPLAY_MESSAGES = 50
 INBOX_REFRESH_INTERVAL = 60
 
 # ===================== COULEURS =====================
-
 R = '\033[0m'
+NOIR = '\033[30m'
 ROUGE = '\033[31m'
 VERT = '\033[32m'
 JAUNE = '\033[33m'
 BLEU = '\033[34m'
 MAGENTA = '\033[35m'
 CYAN = '\033[36m'
+BLANC = '\033[37m'
 GRAS = '\033[1m'
 
 # ===================== USER AGENTS =====================
-
 MOBILE_USER_AGENTS = [
     'Mozilla/5.0 (Linux; Android 10)',
     'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6)',
@@ -73,33 +69,28 @@ def get_or_create_device_id():
             content = f.read().strip()
             if content:
                 return content
-    device_id = str(uuid.uuid4())
+    new_id = str(uuid.uuid4())
     with open(DEVICE_ID_FILE, 'w') as f:
-        f.write(device_id)
-    return device_id
+        f.write(new_id)
+    return new_id
 
 # ===================== MISE À JOUR DISTANTE =====================
-
-def check_remote_update(auto=False):
+def check_remote_update():
     try:
         loading_spinner("Vérification des mises à jour...", 2.0)
         r = requests.get(REMOTE_CONFIG_URL, timeout=10)
 
         if r.status_code != 200:
-            print(f"{JAUNE}⚠️ Impossible de contacter le serveur de mise à jour.{R}")
+            print(f"{JAUNE}⚠️ Impossible de vérifier les mises à jour.{R}")
             return
 
-        config = r.json()
-        remote_version = config.get("latest_version")
-        script_url = config.get("script_url")
-        message = config.get("message", "")
-
-        if not remote_version or not script_url:
-            print(f"{ROUGE}❌ Configuration distante invalide.{R}")
-            return
+        cfg = r.json()
+        remote_version = cfg.get("latest_version")
+        script_url = cfg.get("script_url")
+        message = cfg.get("message", "")
 
         if remote_version == APP_VERSION:
-            print(f"{VERT}✅ Vous êtes déjà à jour (v{APP_VERSION}).{R}")
+            print(f"{VERT}✅ Version à jour ({APP_VERSION}).{R}")
             return
 
         print(f"""
@@ -112,8 +103,7 @@ Nouvelle version  : {remote_version}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{R}
 """)
 
-        confirm = input("Mettre à jour maintenant ? (o/n): ").lower()
-        if confirm != 'o':
+        if input("Mettre à jour maintenant ? (o/n): ").lower() != 'o':
             return
 
         download_and_update(script_url)
@@ -122,33 +112,25 @@ Nouvelle version  : {remote_version}
         print(f"{ROUGE}❌ Erreur mise à jour: {e}{R}")
 
 def download_and_update(script_url):
-    try:
-        loading_spinner("Téléchargement de la mise à jour...", 2.5)
-        r = requests.get(script_url, timeout=15)
+    r = requests.get(script_url, timeout=15)
+    if r.status_code != 200:
+        print(f"{ROUGE}❌ Téléchargement échoué.{R}")
+        return
 
-        if r.status_code != 200:
-            print(f"{ROUGE}❌ Échec du téléchargement.{R}")
-            return
+    script_path = os.path.realpath(sys.argv[0])
+    backup_path = script_path + ".bak"
 
-        script_path = os.path.realpath(sys.argv[0])
-        backup_path = script_path + ".bak"
+    if os.path.exists(script_path):
+        os.replace(script_path, backup_path)
 
-        if os.path.exists(script_path):
-            os.replace(script_path, backup_path)
+    with open(script_path, "w", encoding="utf-8") as f:
+        f.write(r.text)
 
-        with open(script_path, "w", encoding="utf-8") as f:
-            f.write(r.text)
-
-        print(f"{VERT}✅ Mise à jour installée avec succès.{R}")
-        print(f"{JAUNE}🔄 Redémarrage...{R}")
-        time.sleep(2)
-        os.execv(sys.executable, [sys.executable, script_path])
-
-    except Exception as e:
-        print(f"{ROUGE}❌ Mise à jour échouée: {e}{R}")
+    print(f"{VERT}✅ Mise à jour installée. Redémarrage...{R}")
+    time.sleep(2)
+    os.execv(sys.executable, [sys.executable, script_path])
 
 # ===================== CLASSE MAILTM =====================
-
 class MailTmCLI:
     def __init__(self):
         self.account = self.load_account()
@@ -179,15 +161,10 @@ class MailTmCLI:
             "password": password
         }).json()["token"]
 
-        self.account = {
-            "email": email,
-            "password": password,
-            "token": token
-        }
+        self.account = {"email": email, "password": password, "token": token}
         self.save_account()
 
 # ===================== MAIN =====================
-
 def main_cli():
     clear_screen()
     print(f"{VERT}{GRAS}🤖 Mail.tm CLI — v{APP_VERSION}{R}")
@@ -198,20 +175,26 @@ def main_cli():
 
     while True:
         clear_screen()
-        print(f"{CYAN}{GRAS}1. Créer une adresse email{R}")
+        print(f"{CYAN}{GRAS}1. Créer une nouvelle adresse email{R}")
+        print(f"{CYAN}{GRAS}2. Voir la boîte de réception{R}")
+        print(f"{CYAN}{GRAS}3. Lire un message par ID{R}")
+        print(f"{CYAN}{GRAS}4. Supprimer le compte local{R}")
+        print(f"{CYAN}{GRAS}5. Vérifier les emails rapidement{R}")
         print(f"{CYAN}{GRAS}6. 🔄 Vérifier les mises à jour{R}")
         print(f"{ROUGE}{GRAS}0. Quitter{R}")
 
         choice = input("Votre choix: ").strip()
 
-        if choice == "1":
+        if choice == '1':
             cli.create_account()
             wait_for_input("Compte créé. Entrée pour continuer...")
-        elif choice == "6":
-            check_remote_update(auto=False)
+        elif choice == '6':
+            check_remote_update()
             wait_for_input("Entrée pour revenir au menu...")
-        elif choice == "0":
+        elif choice == '0':
             break
+        else:
+            wait_for_input("Option non implémentée. Entrée pour continuer...")
 
 if __name__ == "__main__":
     main_cli()
