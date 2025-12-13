@@ -778,7 +778,7 @@ def main_cli():
             
             wait_for_input()
             
-        elif choice == '8'
+        elif choice == '8':
             sys.stdout.write(f"{CYAN}Vérification de l'état des mises à jour...{R}")
             sys.stdout.flush()
             time.sleep(1)
@@ -823,6 +823,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print(f"\n{CYAN}Interruption par l'utilisateur. Sortie.{R}")
         sys.exit(0)
+
 
 
 
