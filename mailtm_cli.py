@@ -673,18 +673,18 @@ def main_cli():
         clear_screen()
         print(CYAN + GRAS + "="*46 + R)
         print(CYAN + GRAS + "="*46 + R)
-        print(f"{GRAS}\n  --{JAUNE}M  E  N  U   {ROUGE}P  R  I  N  C  I  P  A  L{GRAS}--\n{R}")
+        print(f"{GRAS}\n    {JAUNE}M  E  N  U   {ROUGE}P  R  I  N  C  I  P  A  L{GRAS}  \n{R}")
         print(CYAN + GRAS + "="*46 + R)
         
         # --- AFFICHAGE DU STATUT DE MISE À JOUR DANS LE MENU ---
-        print(f"{BLEU}{GRAS}||{access_status_display}")
+        print(f"{BLEU}{GRAS}|| {access_status_display}")
         print(f"{JAUNE}{GRAS}----------------------------------------------{R}") 
         print(f"{VERT}{GRAS}|| {update_notification}") 
         print(CYAN + GRAS + "="*46 + R)
         # -------------------------------------------------------
 
         if cli.account:
-            print(f"\n|{MAGENTA}{GRAS}📧 Compte actif: {JAUNE}{GRAS}{cli.account['email']}\n{R}")
+            print(f"\n|{MAGENTA}{GRAS}📧 COMPTE ACTIF : {JAUNE}{GRAS}{cli.account['email']}\n{R}")
             print(f"{VERT}{GRAS}1. {ROUGE}[Désactivé] (Supprimer le compte actif){R}")
         else:
             print(f"{JAUNE}\n⚠️  Pas de compte actif. Vous devez en créer un (sur \nl'option 1){R}")
@@ -788,12 +788,12 @@ def main_cli():
             
             if update_available:
                 update_notification = f"{ROUGE}{GRAS}🔥 MISE À JOUR DISPONIBLE (Option 7) !{R}"
-                print(f"{ROUGE}🚨 Une mise à jour est disponible ! Exécutez l'Option 7 pour l'appliquer.{R}")
+                print(f"{ROUGE}🚨 Une mise à jour est disponible ! Exécutez l'Option 7 pour l'appliquer{R}")
             else:
-                update_notification = f"{VERT}Script à jour.{R}"
-                print(f"{VERT}✅ Le statut du script est mis à jour. Aucune action n'est requise.{R}")
+                update_notification = f"{VERT}S c r i p t   à   j o u r{R}"
+                print(f"{VERT}✅ Le statut du script est mis à jour. Aucune action n'est requise{R}")
             
-            time.sleep(2)
+            time.sleep(3)
 
         elif choice == '0':
             print(f"{CYAN}Au revoir ! Merci d'utiliser Mail.tm CLI.{R}")
@@ -823,6 +823,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print(f"\n{CYAN}Interruption par l'utilisateur. Sortie.{R}")
         sys.exit(0)
+
 
 
 
