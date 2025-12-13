@@ -1,4 +1,5 @@
 # mailtm_cli.py (Version Finale + Couleurs Mélangées + Option Mise à jour DISTANTE)
+# Corrigé pour mise à jour 1.2.0 automatique
 
 import json
 import os
@@ -9,6 +10,7 @@ import uuid
 import time
 import sys
 from requests.exceptions import ConnectionError, ReadTimeout
+from packaging import version  # Pour comparer correctement les versions
 
 # ===================== VERSION APP =====================
 APP_VERSION = "1.1.0"
@@ -84,7 +86,8 @@ def check_remote_update():
         script_url = cfg.get("script_url")
         message = cfg.get("message", "")
 
-        if remote_version == APP_VERSION:
+        # Comparaison correcte des versions
+        if version.parse(remote_version) <= version.parse(APP_VERSION):
             print(f"{VERT}✅ Version à jour ({APP_VERSION}).{R}")
             return
 
@@ -107,23 +110,26 @@ Nouvelle version  : {VERT}{remote_version}
         print(f"{ROUGE}❌ Erreur mise à jour: {e}{R}")
 
 def download_and_update(script_url):
-    r = requests.get(script_url, timeout=15)
-    if r.status_code != 200:
-        print(f"{ROUGE}❌ Téléchargement échoué.{R}")
-        return
+    try:
+        r = requests.get(script_url, timeout=15)
+        if r.status_code != 200:
+            print(f"{ROUGE}❌ Téléchargement échoué.{R}")
+            return
 
-    script_path = os.path.realpath(sys.argv[0])
-    backup_path = script_path + ".bak"
+        script_path = os.path.realpath(sys.argv[0])
+        backup_path = script_path + ".bak"
 
-    if os.path.exists(script_path):
-        os.replace(script_path, backup_path)
+        if os.path.exists(script_path):
+            os.replace(script_path, backup_path)
 
-    with open(script_path, "w", encoding="utf-8") as f:
-        f.write(r.text)
+        with open(script_path, "w", encoding="utf-8") as f:
+            f.write(r.text)
 
-    print(f"{VERT}✅ Mise à jour installée. Redémarrage...{R}")
-    time.sleep(2)
-    os.execv(sys.executable, [sys.executable, script_path])
+        print(f"{VERT}✅ Mise à jour installée. Redémarrage...{R}")
+        time.sleep(2)
+        os.execv(sys.executable, [sys.executable, script_path])
+    except Exception as e:
+        print(f"{ROUGE}❌ Impossible d'installer la mise à jour: {e}{R}")
 
 # ===================== CLASSE MAILTM =====================
 class MailTmCLI:
@@ -174,7 +180,7 @@ def main_cli():
         # Barre multicolore
         print(f"{ROUGE}{GRAS}━━━━━━━━{JAUNE}━━━━━━━━{VERT}━━━━━━━━{BLEU}━━━━━━━━{MAGENTA}━━━━━━━━{R}")
         print(f"{ROUGE}{GRAS}━━━━━━━━{JAUNE}━━━━━━━━{VERT}━━━━━━━━{BLEU}━━━━━━━━{MAGENTA}━━━━━━━━{R}")
-        print(f"{CYAN}{GRAS} M  E  N  U  P  R  I  N  C  I  P  A  L{R}")
+        print(f"{CYAN}{GRAS} M  E  N  U  P  R  I  N  C  I  P  A  L {R}")
         print(f"{ROUGE}{GRAS}━━━━━━━━{JAUNE}━━━━━━━━{VERT}━━━━━━━━{BLEU}━━━━━━━━{MAGENTA}━━━━━━━━{R}")
         print(f"{JAUNE}{GRAS}Version : {VERT}{GRAS}v{APP_VERSION}{R}")
         print(f"{ROUGE}{GRAS}━━━━━━━━{JAUNE}━━━━━━━━{VERT}━━━━━━━━{BLEU}━━━━━━━━{MAGENTA}━━━━━━━━{R}")
