@@ -1,10 +1,6 @@
 {
-    "update": {
-        "enabled": true,
-        "raw_url": "https://raw.githubusercontent.com/Elyseproduction/mailtm/main/mailtm_cli.py"
-    },
-    "features": {
-        "auto_update": true
-    },
-    "plugins": []
+  "latest_version": "1.2.0",
+  "script_url": "https://raw.githubusercontent.com/Elyseproduction/mailtm/main/main/mailtm_cli.py",
+  "force_update": false,
+  "message": "Nouvelle version disponible : corrections, optimisations et ajout du système de mise à jour automatique."
 }
