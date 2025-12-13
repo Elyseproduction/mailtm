@@ -1376,7 +1376,7 @@ def main_cli():
 
         print(CYAN + GRAS + "="*46 + R)
 
-        print(f"{GRAS}         M  E  N  U    P  R  I  N  C  I  P  A  L      {R}")
+        print(f"{GRAS}     M  E  N  U    P  R  I  N  C  I  P  A  L      {R}")
 
         print(CYAN + GRAS + "="*46 + R)
 
@@ -1619,6 +1619,7 @@ if __name__ == '__main__':
         print("pip install requests html2text colorama")
 
         print(f"--------------------{R}\n")
+
 
 
 
