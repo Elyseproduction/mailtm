@@ -1392,7 +1392,7 @@ def main_cli():
 
         if cli.account:
 
-            print(f"|{MAGENTA}📧 Compte actif: {JAUNE}{GRAS}{cli.account['email']}\n{R}")
+            print(f"\n|{MAGENTA}📧 Compte actif: {JAUNE}{GRAS}{cli.account['email']}\n{R}")
 
             print(f"{VERT}{GRAS}1. {ROUGE}\n[Désactivé] (Supprimer le compte actif d'abord){R}")
 
@@ -1617,6 +1617,7 @@ if __name__ == '__main__':
         print("pip install requests html2text colorama")
 
         print(f"--------------------{R}\n")
+
 
 
 
