@@ -1376,27 +1376,23 @@ def main_cli():
 
         print(CYAN + GRAS + "="*46 + R)
 
-        print(f"{GRAS}     M  E  N  U    P  R  I  N  C  I  P  A  L      {R}")
+        print(f"{GRAS}    M  E  N  U    P  R  I  N  C  I  P  A  L{R}")
 
         print(CYAN + GRAS + "="*46 + R)
 
         print(f"{BLEU}||{R}{access_status_display}")
 
-        print(VERT + GRAS + "-"*46 + R)
+        print(VERT + GRAS + "="*46 + R)
 
-        print(VERT + GRAS + "-"*46 + R)
+        print(VERT + GRAS + "="*46 + R)
 
 
 
         if cli.account:
 
-            print(VERT + GRAS + "-"*55 + R)
+            print(f"|{MAGENTA}📧 Compte actif: {JAUNE}{GRAS}{cli.account['email']}\n{R}")
 
-            print(f"|{MAGENTA}📧 Compte actif: {JAUNE}{GRAS}{cli.account['email']}{R}")
-
-            print(VERT + GRAS + "-"*55 + R)
-
-            print(f"{VERT}{GRAS}1. {ROUGE}[Désactivé] (Supprimer le compte actif d'abord){R}")
+            print(f"{VERT}{GRAS}1. {ROUGE}\n[Désactivé] (Supprimer le compte actif d'abord){R}")
 
         else:
 
@@ -1619,6 +1615,7 @@ if __name__ == '__main__':
         print("pip install requests html2text colorama")
 
         print(f"--------------------{R}\n")
+
 
 
 
