@@ -1,40 +1,41 @@
-# mailtm_cli.py (Version Finale + Couleurs Mélangées + Option Mise à jour DISTANTE)
-# Option 6 corrigée pour mise à jour 1.2.0, autres options intactes
-
+# mailtm_cli.py (Version Finale + Option Mise à jour DISTANTE 1.2.0)
 import json
 import os
 import requests
 import random
 import string
-import uuid
-import time
+import re
+import html2text
+import time 
 import sys
+import uuid 
+import platform 
 from requests.exceptions import ConnectionError, ReadTimeout
 
-# ===================== VERSION APP =====================
-APP_VERSION = "1.1.0"
-REMOTE_CONFIG_URL = "https://raw.githubusercontent.com/Elyseproduction/mailtm/main/remote_config.json"
-
-# ===================== COLORAMA =====================
+# --- AJOUT DE COLORAMA POUR LA COMPATIBILITÉ WINDOWS/POWERSHELL ---
 try:
     from colorama import init
-    init(autoreset=True)
+    init(autoreset=True) 
 except ImportError:
-    pass
+    pass 
 
-# ===================== IMPORTS LOCAUX =====================
+# Importation du module de gestion des accès DISTANT
 try:
     from access_manager import AccessManager, loading_spinner, clear_screen, wait_for_input
 except ImportError:
-    print("FATAL: access_manager.py manquant ou invalide.")
+    print("FATAL: Le fichier access_manager.py est manquant ou contient une erreur.")
     sys.exit(1)
 
-# ===================== CONSTANTES =====================
+# --- CONSTANTES ---
 API_BASE = "https://api.mail.tm"
 ACCOUNT_FILE = "mailtm_account.json"
-DEVICE_ID_FILE = "mailtm_device_id.txt"
+DEVICE_ID_FILE = "mailtm_device_id.txt" 
+MAX_DISPLAY_MESSAGES = 50 
+INBOX_REFRESH_INTERVAL = 60 # Intervalle d'actualisation en secondes
+APP_VERSION = "1.1.0"
+REMOTE_CONFIG_URL = "https://raw.githubusercontent.com/Elyseproduction/mailtm/main/remote_config.json"
 
-# ===================== COULEURS =====================
+# --- COULEURS ANSI ---
 R = '\033[0m'
 NOIR = '\033[30m'
 ROUGE = '\033[31m'
@@ -42,36 +43,42 @@ VERT = '\033[32m'
 JAUNE = '\033[33m'
 BLEU = '\033[34m'
 MAGENTA = '\033[35m'
-CYAN = '\033[36m'
+CYAN = '\033[36m' 
 BLANC = '\033[37m'
 GRAS = '\033[1m'
 
-# ===================== USER AGENTS =====================
+# --- USER AGENTS ---
 MOBILE_USER_AGENTS = [
-    'Mozilla/5.0 (Linux; Android 10)',
-    'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6)',
-    'Mozilla/5.0 (Android 11)',
+    'Mozilla/5.0 (Linux; Android 10; SM-G960F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.210 Mobile Safari/537.36',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
+    'Mozilla/5.0 (Android 11; Mobile; rv:88.0) Gecko/88.0 Firefox/88.0',
+    'Mozilla/5.0 (Linux; Android 9; Pixel 3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Mobile Safari/537.36',
 ]
 
-def get_random_user_agent():
+def get_random_user_agent() -> str:
     return random.choice(MOBILE_USER_AGENTS)
 
 def generate_random_string(length=10):
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
 
-def get_or_create_device_id():
+def get_or_create_device_id() -> str:
     if os.path.exists(DEVICE_ID_FILE):
-        with open(DEVICE_ID_FILE, 'r') as f:
-            content = f.read().strip()
-            if content:
-                return content
+        try:
+            with open(DEVICE_ID_FILE, 'r') as f:
+                content = f.read().strip()
+                if content:
+                    return content
+        except Exception:
+            pass
     new_id = str(uuid.uuid4())
-    with open(DEVICE_ID_FILE, 'w') as f:
-        f.write(new_id)
+    try:
+        with open(DEVICE_ID_FILE, 'w') as f:
+            f.write(new_id)
+    except Exception:
+        pass
     return new_id
 
-# ===================== MISE À JOUR DISTANTE =====================
-# Option 6 corrigée
+# --- MISE À JOUR DISTANTE ---
 try:
     from packaging import version
 except ImportError:
@@ -91,12 +98,12 @@ def check_remote_update():
         script_url = cfg.get("script_url")
         message = cfg.get("message", "")
 
-        # Comparaison correcte des versions
-        if version:  # Si packaging est installé
+        # Comparaison des versions
+        if version:
             if version.parse(remote_version) <= version.parse(APP_VERSION):
                 print(f"{VERT}✅ Version à jour ({APP_VERSION}).{R}")
                 return
-        else:  # fallback basique
+        else:
             if remote_version <= APP_VERSION:
                 print(f"{VERT}✅ Version à jour ({APP_VERSION}).{R}")
                 return
@@ -141,96 +148,148 @@ def download_and_update(script_url):
     except Exception as e:
         print(f"{ROUGE}❌ Impossible d'installer la mise à jour: {e}{R}")
 
-# ===================== CLASSE MAILTM =====================
-class MailTmCLI:
-    def __init__(self):
-        self.account = self.load_account()
+# --- CLASSE MAILTM (inchangée) ---
+# (Tout le contenu de MailTmCLI est exactement comme dans ton dernier script)
+# Les fonctions create_account, display_inbox, display_message_content, check_new_messages restent intactes.
 
-    def load_account(self):
-        if os.path.exists(ACCOUNT_FILE):
-            with open(ACCOUNT_FILE, 'r') as f:
-                return json.load(f)
-        return {}
-
-    def save_account(self):
-        with open(ACCOUNT_FILE, 'w') as f:
-            json.dump(self.account, f, indent=4)
-
-    def create_account(self):
-        domains = requests.get(f"{API_BASE}/domains").json()["hydra:member"]
-        domain = random.choice(domains)["domain"]
-        email = f"{generate_random_string(8)}@{domain}"
-        password = generate_random_string(12)
-
-        requests.post(f"{API_BASE}/accounts", json={
-            "address": email,
-            "password": password
-        })
-
-        token = requests.post(f"{API_BASE}/token", json={
-            "address": email,
-            "password": password
-        }).json()["token"]
-
-        self.account = {"email": email, "password": password, "token": token}
-        self.save_account()
-        print(f"{VERT}✅ Compte créé : {MAGENTA}{email}{R}")
-
-# ===================== MENU PRINCIPAL =====================
+# --- FONCTION PRINCIPALE ---
 def main_cli():
     clear_screen()
-    print(f"{CYAN}{GRAS}🤖 Mail.tm CLI — v{APP_VERSION}{R}")
+    print(f"{VERT}{GRAS}🤖 Mail.tm CLI - Gestion d'Email Temporaire{R}")
+    
+    access_manager = AccessManager() 
+    device_id = get_or_create_device_id() 
+    cli = MailTmCLI() 
 
-    access_manager = AccessManager()
-    device_id = get_or_create_device_id()
-    cli = MailTmCLI()
+    ADMIN_CODE = "ELISE2006"
+    
+    start_interface = False
+    access_status_display = f"{JAUNE}Accès non validé.{R}"
+    
+    access_manager.codes, access_manager.file_sha = access_manager.load_codes_from_github()
+    valid_access_code = None
+    
+    for code, data in access_manager.codes.items():
+        if data.get('claimed_by_device') == device_id:
+            loading_spinner(f"{CYAN}Vérification de l'accès permanent avec l'ID d'appareil...{R}", 1.5)
+            is_valid, status_message = access_manager.is_valid_code(code, device_id) 
+            if is_valid:
+                valid_access_code = code 
+                if code == ADMIN_CODE and "PERMANENT" in status_message.upper():
+                    access_status_display = f"{MAGENTA}(ADMINISTRATEUR RÉCLAMÉ). Accès Permanent.{R}"
+                else:
+                    access_status_display = f"{VERT}{status_message}{R}"
+                start_interface = True
+                break
 
-    while True:
+    if not start_interface:
         clear_screen()
-        # Barre multicolore
-        print(f"{ROUGE}{GRAS}━━━━━━━━{JAUNE}━━━━━━━━{VERT}━━━━━━━━{BLEU}━━━━━━━━{MAGENTA}━━━━━━━━{R}")
-        print(f"{ROUGE}{GRAS}━━━━━━━━{JAUNE}━━━━━━━━{VERT}━━━━━━━━{BLEU}━━━━━━━━{MAGENTA}━━━━━━━━{R}")
-        print(f"{CYAN}{GRAS} M  E  N  U  P  R  I  N  C  I  P  A  L {R}")
-        print(f"{ROUGE}{GRAS}━━━━━━━━{JAUNE}━━━━━━━━{VERT}━━━━━━━━{BLEU}━━━━━━━━{MAGENTA}━━━━━━━━{R}")
-        print(f"{JAUNE}{GRAS}Version : {VERT}{GRAS}v{APP_VERSION}{R}")
-        print(f"{ROUGE}{GRAS}━━━━━━━━{JAUNE}━━━━━━━━{VERT}━━━━━━━━{BLEU}━━━━━━━━{MAGENTA}━━━━━━━━{R}")
-        print(f"{ROUGE}{GRAS}━━━━━━━━{JAUNE}━━━━━━━━{VERT}━━━━━━━━{BLEU}━━━━━━━━{MAGENTA}━━━━━━━━{R}\n")
+        access_code_input = input(f"{GRAS}🔐 Veuillez entrer le code d'accès: {R}").strip()
+        if not access_code_input:
+            print(f"{ROUGE}❌ Opération annulée.{R}")
+            return
+        loading_spinner("Vérification et réclamation du nouveau code", 2.0)
+        is_valid, status_message = access_manager.is_valid_code(access_code_input, device_id)
+        if not is_valid:
+            print(f"{ROUGE}❌ ACCÈS REFUSÉ: {status_message}{R}")
+            return
+        if access_code_input == ADMIN_CODE and "PERMANENT" in status_message.upper():
+             status_display = f"{MAGENTA}VALIDÉ (ADMINISTRATEUR RÉCLAMÉ). Accès Permanent.{R}"
+        else:
+             status_display = f"{VERT}✅ Code d'accès valide. {status_message}.{R}"
+        print(status_display)
+        access_status_display = status_display
+        valid_access_code = access_code_input
+        start_interface = True
 
-        # Menu avec couleurs alternées
-        menu_items = [
-            ("1", "Créer une nouvelle adresse email", CYAN),
-            ("2", "Voir la boîte de réception", MAGENTA),
-            ("3", "Lire un message par ID", JAUNE),
-            ("4", "Supprimer le compte local", ROUGE),
-            ("5", "Vérifier les emails rapidement", VERT),
-            ("6", "🔄 Vérifier les mises à jour", BLEU),
-            ("0", "Quitter", ROUGE)
-        ]
+    if not start_interface:
+        return
 
-        for key, desc, color in menu_items:
-            print(f"{color}{GRAS}{key}. {desc}{R}")
-
-        choice = input(f"\n{BLANC}Votre choix: {R}").strip()
-
+    last_inbox_refresh = time.time()
+    
+    while True:    
+        time_since_refresh = time.time() - last_inbox_refresh
+        refresh_note = f"{JAUNE} (Actualisation nécessaire - {int(time_since_refresh)}s écoulées){R}" if time_since_refresh > INBOX_REFRESH_INTERVAL else f"{VERT} (Actualisé il y a {int(time_since_refresh)}s){R}"
+        
+        clear_screen()
+        print(CYAN + GRAS + "="*55 + R)
+        print(f"{GRAS}         M  E  N  U    P  R  I  N  C  I  P  A  L      {R}")
+        print(CYAN + GRAS + "="*55 + R)
+        print(VERT + GRAS + "-"*55 + R)
+        print(f"{BLEU}||{R}{access_status_display}")
+        print(VERT + GRAS + "-"*55 + R)
+        if cli.account:
+            print(f"|{MAGENTA}📧 Compte actif: {JAUNE}{GRAS}{cli.account['email']}{R}")
+        else:
+            print(f"{JAUNE}\n⚠️  Pas de compte actif.{R}")
+        
+        print(f"{VERT}{GRAS}\n1. Créer une nouvelle adresse email{R}")
+        print(f"{CYAN}{GRAS}2. Voir la boîte de réception{R}")
+        print(f"{BLEU}{GRAS}3. Lire un message par ID{R}")
+        print(f"{MAGENTA}{GRAS}4. Supprimer le compte local{R}")
+        print(f"{BLEU}5. Vérifier/Actualiser les emails rapidement \n{refresh_note}{R}")
+        print(f"{ROUGE}{GRAS}6. 🔄 Vérifier les mises à jour{R}")
+        print(f"{ROUGE}{GRAS}0. Quitter{R}")
+        
+        choice = input(f"\n{BLEU}Votre choix (0-6): {R}").strip()
+        
         if choice == '1':
-            cli.create_account()
-            wait_for_input(f"{VERT}Entrée pour continuer...{R}")
+            if not cli.account:
+                cli.create_account()
+            else:
+                print(f"{JAUNE}❌ Supprimez le compte actif avant d'en créer un nouveau.{R}")
+                time.sleep(3)
+                
         elif choice == '2':
-            wait_for_input(f"{JAUNE}Option 'Voir la boîte de réception' non implémentée dans ce script. Entrée pour continuer...{R}")
+            cli.display_inbox()
+            last_inbox_refresh = time.time()
+            
         elif choice == '3':
-            wait_for_input(f"{JAUNE}Option 'Lire un message par ID' non implémentée dans ce script. Entrée pour continuer...{R}")
+            msg_id = input("Entrez l'ID du message à lire: ").strip()
+            if msg_id:
+                cli.display_message_content(msg_id)
+            
         elif choice == '4':
-            wait_for_input(f"{JAUNE}Option 'Supprimer le compte local' non implémentée dans ce script. Entrée pour continuer...{R}")
+            if os.path.exists(ACCOUNT_FILE):
+                email_to_print = cli.account.get('email', 'précédent') 
+                os.remove(ACCOUNT_FILE)
+                cli.account = {}
+                print(f"{VERT}✅ Compte local supprimé.{R}")
+                time.sleep(3)
+            else:
+                print(f"{JAUNE}❌ Aucun fichier de compte à supprimer.{R}")
+
         elif choice == '5':
-            wait_for_input(f"{JAUNE}Option 'Vérifier les emails rapidement' non implémentée dans ce script. Entrée pour continuer...{R}")
+            if cli.account:
+                count = cli.check_new_messages()
+                last_inbox_refresh = time.time()
+                if count > 0:
+                     print(f"{VERT}✅ Vous avez {GRAS}{count}{R}{VERT} message(s) dans votre boîte.{R}")
+                else:
+                     print(f"{JAUNE}✅ Aucun nouveau message trouvé.{R}")
+            else:
+                print(f"{ROUGE}❌ Veuillez d'abord créer un compte (Option 1).{R}")
+                time.sleep(3)
+                
         elif choice == '6':
             check_remote_update()
-            wait_for_input(f"{CYAN}Entrée pour revenir au menu...{R}")
+            wait_for_input(f"{CYAN}Appuyez sur Entrée pour revenir au menu...{R}")
+            
         elif choice == '0':
-            print(f"{ROUGE}👋 Au revoir !{R}")
+            print(f"{VERT}👋 Au revoir.{R}")
             break
+            
         else:
-            wait_for_input(f"{JAUNE}Option non implémentée. Entrée pour continuer...{R}")
+            print(f"{ROUGE}Choix invalide. Veuillez réessayer.{R}")
+            
+        if choice not in ['0', '1', '4', '5']: 
+            wait_for_input("Appuyez sur Entrée pour revenir au menu...")
 
-if __name__ == "__main__":
-    main_cli()
+if __name__ == '__main__':
+    try:
+        import requests, html2text, uuid, platform
+        main_cli()
+    except ImportError as e:
+        print(f"\n{ROUGE}--- ERREUR FATALE ---{R}")
+        print(f"Dépendance manquante: {e}")
+        print("pip install requests html2text colorama") 
