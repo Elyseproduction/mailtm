@@ -1,4 +1,4 @@
-# mailtm_cli.py — VERSION AVEC AUTO-MISE À JOUR GITHUB
+# mailtm_cli.py — Version avec mise à jour DISTANTE (OPTION MENU UNIQUEMENT)
 
 import json
 import os
@@ -13,13 +13,10 @@ import uuid
 import platform
 from requests.exceptions import ConnectionError, ReadTimeout
 
-# ===================== CONFIGURATION VERSION =====================
+# ===================== VERSION APP =====================
 
 APP_VERSION = "1.1.0"
-
-REMOTE_CONFIG_URL = (
-    "https://raw.githubusercontent.com/Elyseproduction/mailtm/main/remote_config.json"
-)
+REMOTE_CONFIG_URL = "https://raw.githubusercontent.com/Elyseproduction/mailtm/main/remote_config.json"
 
 # ===================== COLORAMA =====================
 
@@ -73,7 +70,9 @@ def generate_random_string(length=10):
 def get_or_create_device_id():
     if os.path.exists(DEVICE_ID_FILE):
         with open(DEVICE_ID_FILE, 'r') as f:
-            return f.read().strip()
+            content = f.read().strip()
+            if content:
+                return content
     device_id = str(uuid.uuid4())
     with open(DEVICE_ID_FILE, 'w') as f:
         f.write(device_id)
@@ -83,19 +82,25 @@ def get_or_create_device_id():
 
 def check_remote_update(auto=False):
     try:
-        loading_spinner("Vérification des mises à jour...", 2)
+        loading_spinner("Vérification des mises à jour...", 2.0)
         r = requests.get(REMOTE_CONFIG_URL, timeout=10)
+
         if r.status_code != 200:
-            return False
+            print(f"{JAUNE}⚠️ Impossible de contacter le serveur de mise à jour.{R}")
+            return
 
         config = r.json()
         remote_version = config.get("latest_version")
         script_url = config.get("script_url")
-        force_update = config.get("force_update", False)
         message = config.get("message", "")
 
-        if remote_version == APP_VERSION and not force_update:
-            return False
+        if not remote_version or not script_url:
+            print(f"{ROUGE}❌ Configuration distante invalide.{R}")
+            return
+
+        if remote_version == APP_VERSION:
+            print(f"{VERT}✅ Vous êtes déjà à jour (v{APP_VERSION}).{R}")
+            return
 
         print(f"""
 {CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -107,32 +112,40 @@ Nouvelle version  : {remote_version}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{R}
 """)
 
-        if not auto and not force_update:
-            if input("Mettre à jour maintenant ? (o/n): ").lower() != "o":
-                return False
+        confirm = input("Mettre à jour maintenant ? (o/n): ").lower()
+        if confirm != 'o':
+            return
 
         download_and_update(script_url)
-        return True
 
     except Exception as e:
-        print(f"{ROUGE}Erreur mise à jour: {e}{R}")
-        return False
-
+        print(f"{ROUGE}❌ Erreur mise à jour: {e}{R}")
 
 def download_and_update(script_url):
-    r = requests.get(script_url, timeout=15)
-    script_path = os.path.realpath(sys.argv[0])
-    backup_path = script_path + ".bak"
+    try:
+        loading_spinner("Téléchargement de la mise à jour...", 2.5)
+        r = requests.get(script_url, timeout=15)
 
-    if os.path.exists(script_path):
-        os.replace(script_path, backup_path)
+        if r.status_code != 200:
+            print(f"{ROUGE}❌ Échec du téléchargement.{R}")
+            return
 
-    with open(script_path, "w", encoding="utf-8") as f:
-        f.write(r.text)
+        script_path = os.path.realpath(sys.argv[0])
+        backup_path = script_path + ".bak"
 
-    print(f"{VERT}✅ Mise à jour installée. Redémarrage...{R}")
-    time.sleep(2)
-    os.execv(sys.executable, [sys.executable, script_path])
+        if os.path.exists(script_path):
+            os.replace(script_path, backup_path)
+
+        with open(script_path, "w", encoding="utf-8") as f:
+            f.write(r.text)
+
+        print(f"{VERT}✅ Mise à jour installée avec succès.{R}")
+        print(f"{JAUNE}🔄 Redémarrage...{R}")
+        time.sleep(2)
+        os.execv(sys.executable, [sys.executable, script_path])
+
+    except Exception as e:
+        print(f"{ROUGE}❌ Mise à jour échouée: {e}{R}")
 
 # ===================== CLASSE MAILTM =====================
 
@@ -166,7 +179,11 @@ class MailTmCLI:
             "password": password
         }).json()["token"]
 
-        self.account = {"email": email, "password": password, "token": token}
+        self.account = {
+            "email": email,
+            "password": password,
+            "token": token
+        }
         self.save_account()
 
 # ===================== MAIN =====================
@@ -175,27 +192,24 @@ def main_cli():
     clear_screen()
     print(f"{VERT}{GRAS}🤖 Mail.tm CLI — v{APP_VERSION}{R}")
 
-    # 🔄 Vérification MAJ automatique
-    check_remote_update(auto=True)
-
     access_manager = AccessManager()
     device_id = get_or_create_device_id()
     cli = MailTmCLI()
 
     while True:
         clear_screen()
-        print(f"{CYAN}{GRAS}1. Créer un email{R}")
-        print(f"{CYAN}{GRAS}2. 🔄 Vérifier les mises à jour{R}")
+        print(f"{CYAN}{GRAS}1. Créer une adresse email{R}")
+        print(f"{CYAN}{GRAS}6. 🔄 Vérifier les mises à jour{R}")
         print(f"{ROUGE}{GRAS}0. Quitter{R}")
 
-        choice = input("Choix: ").strip()
+        choice = input("Votre choix: ").strip()
 
         if choice == "1":
             cli.create_account()
             wait_for_input("Compte créé. Entrée pour continuer...")
-        elif choice == "2":
+        elif choice == "6":
             check_remote_update(auto=False)
-            wait_for_input("Entrée pour continuer...")
+            wait_for_input("Entrée pour revenir au menu...")
         elif choice == "0":
             break
 
