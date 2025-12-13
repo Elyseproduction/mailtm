@@ -173,8 +173,8 @@ def main_cli():
         clear_screen()
         # Barre multicolore
         print(f"{ROUGE}{GRAS}━━━━━━━━{JAUNE}━━━━━━━━{VERT}━━━━━━━━{BLEU}━━━━━━━━{MAGENTA}━━━━━━━━{R}")
-        print(f"{CYAN}{GRAS}        M  E  N  U  P  R  I  N  C  I  P  A  L      {R}")
-        print(f"{JAUNE}Version : {MAGENTA}v{APP_VERSION}{R}")
+        print(f"{CYAN}{GRAS}    M  E  N  U  P  R  I  N  C  I  P  A  L{R}")
+        print(f"{JAUNE}{GRAS}Version : {VERT}{GRAS}v{APP_VERSION}{R}")
         print(f"{ROUGE}{GRAS}━━━━━━━━{JAUNE}━━━━━━━━{VERT}━━━━━━━━{BLEU}━━━━━━━━{MAGENTA}━━━━━━━━{R}\n")
 
         # Menu avec couleurs alternées
