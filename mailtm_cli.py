@@ -1254,7 +1254,9 @@ def main_cli():
 
         if data.get('claimed_by_device') == device_id:
 
-            loading_spinner(f"{CYAN}Vérification de l'accès permanent avec l'ID d'appareil...{R}", 1.5)
+            print(f"{CYAN}Vérification de l'accès permanent avec l'ID d'appareil...{R}")
+            time.sleep(3)
+            clear_screen()
 
             cleanup_line() # Nettoie la ligne après le spinner 'Vérification de l'accès permanent...'
 
@@ -1615,6 +1617,7 @@ if __name__ == '__main__':
         print("pip install requests html2text colorama")
 
         print(f"--------------------{R}\n")
+
 
 
 
