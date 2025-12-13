@@ -1,4 +1,4 @@
-# mailtm_cli.py (Version Finale avec Hachage Binaire Corrigé)
+# mailtm_cli.py (Version Corrigée Indentation)
 
 import json
 import os
@@ -268,8 +268,7 @@ class MailTmCLI:
         password = generate_random_string(12)
         data = {"address": email, "password": password}
         delay = random.uniform(1.5, 4.0)
-        print(f"Création de {email} (Attente : {delay:.1f}s)")
-        time.sleep(3)
+        loading_spinner(f"Création de {email} (Attente : {delay:.1f}s)", delay)
         cleanup_line() 
         try:
             headers = {'User-Agent': get_random_user_agent()}
@@ -694,7 +693,7 @@ def main_cli():
         print(f"{CYAN}{GRAS}2. Voir la boîte de réception{R}")
         print(f"{BLEU}{GRAS}3. Lire un message par ID{R}")
         print(f"{MAGENTA}{GRAS}4. Supprimer le compte local{R}")
-        print(f"{BLEU}{GRAS}5. Vérifier/Actualiser les emails rapidement \n{refresh_note}{R}")
+        print(f"{BLEU}5. Vérifier/Actualiser les emails rapidement \n{refresh_note}{R}")
         print(f"{VERT}{GRAS}6. ⏳ Attendre automatiquement un email de vérification (Polling){R}")
         print(f"{MAGENTA}{GRAS}7. 🔄 Vérifier/Installer la mise à jour du script{R}")
         print(f"{CYAN}{GRAS}8. 🔁 Actualiser le statut des mises à jour (Menu seul){R}")
@@ -824,16 +823,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print(f"\n{CYAN}Interruption par l'utilisateur. Sortie.{R}")
         sys.exit(0)
-
-
-
-
-
-
-
-
-
-
-
-
-
