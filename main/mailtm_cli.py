@@ -1,16 +1,13 @@
-# mailtm_cli.py (Version Finale + Option Mise à jour DISTANTE)
+# mailtm_cli.py (Version Finale + Couleurs Mélangées + Option Mise à jour DISTANTE)
 
 import json
 import os
 import requests
 import random
 import string
-import re
-import html2text
+import uuid
 import time
 import sys
-import uuid
-import platform
 from requests.exceptions import ConnectionError, ReadTimeout
 
 # ===================== VERSION APP =====================
@@ -35,8 +32,6 @@ except ImportError:
 API_BASE = "https://api.mail.tm"
 ACCOUNT_FILE = "mailtm_account.json"
 DEVICE_ID_FILE = "mailtm_device_id.txt"
-MAX_DISPLAY_MESSAGES = 50
-INBOX_REFRESH_INTERVAL = 60
 
 # ===================== COULEURS =====================
 R = '\033[0m'
@@ -77,7 +72,7 @@ def get_or_create_device_id():
 # ===================== MISE À JOUR DISTANTE =====================
 def check_remote_update():
     try:
-        loading_spinner("Vérification des mises à jour...", 2.0)
+        loading_spinner(f"{CYAN}Vérification des mises à jour...{R}", 2.0)
         r = requests.get(REMOTE_CONFIG_URL, timeout=10)
 
         if r.status_code != 200:
@@ -94,16 +89,16 @@ def check_remote_update():
             return
 
         print(f"""
-{CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔄 MISE À JOUR DISPONIBLE
-Version actuelle : {APP_VERSION}
-Nouvelle version  : {remote_version}
+{MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔄 {JAUNE}MISE À JOUR DISPONIBLE
+{CYAN}Version actuelle : {ROUGE}{APP_VERSION}
+Nouvelle version  : {VERT}{remote_version}
 
 📝 {message}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{R}
+{MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{R}
 """)
 
-        if input("Mettre à jour maintenant ? (o/n): ").lower() != 'o':
+        if input(f"{BLEU}Mettre à jour maintenant ? (o/n): {R}").lower() != 'o':
             return
 
         download_and_update(script_url)
@@ -163,11 +158,12 @@ class MailTmCLI:
 
         self.account = {"email": email, "password": password, "token": token}
         self.save_account()
+        print(f"{VERT}✅ Compte créé : {MAGENTA}{email}{R}")
 
-# ===================== MAIN =====================
+# ===================== MENU PRINCIPAL =====================
 def main_cli():
     clear_screen()
-    print(f"{VERT}{GRAS}🤖 Mail.tm CLI — v{APP_VERSION}{R}")
+    print(f"{CYAN}{GRAS}🤖 Mail.tm CLI — v{APP_VERSION}{R}")
 
     access_manager = AccessManager()
     device_id = get_or_create_device_id()
@@ -175,33 +171,39 @@ def main_cli():
 
     while True:
         clear_screen()
-        print(CYAN + GRAS + "=" * 55 + R)
-        print(CYAN + GRAS + "=" * 55 + R)
-        print(f"{GRAS}         M  E  N  U    P  R  I  N  C  I  P  A  L      {R}")
-        print(f"{JAUNE}{GRAS}                 Version : v{APP_VERSION}{R}")
-        print(CYAN + GRAS + "=" * 55 + R)
-        print(CYAN + GRAS + "=" * 55 + R)
-        print("")
-        print(f"{CYAN}{GRAS}1. Créer une nouvelle adresse email{R}")
-        print(f"{CYAN}{GRAS}2. Voir la boîte de réception{R}")
-        print(f"{CYAN}{GRAS}3. Lire un message par ID{R}")
-        print(f"{CYAN}{GRAS}4. Supprimer le compte local{R}")
-        print(f"{CYAN}{GRAS}5. Vérifier les emails rapidement{R}")
-        print(f"{CYAN}{GRAS}6. 🔄 Vérifier les mises à jour{R}")
-        print(f"{ROUGE}{GRAS}0. Quitter{R}")
+        # Barre multicolore
+        print(f"{ROUGE}{GRAS}━━━━━━━━{JAUNE}━━━━━━━━{VERT}━━━━━━━━{BLEU}━━━━━━━━{MAGENTA}━━━━━━━━{R}")
+        print(f"{CYAN}{GRAS}        M  E  N  U  P  R  I  N  C  I  P  A  L      {R}")
+        print(f"{JAUNE}Version : {MAGENTA}v{APP_VERSION}{R}")
+        print(f"{ROUGE}{GRAS}━━━━━━━━{JAUNE}━━━━━━━━{VERT}━━━━━━━━{BLEU}━━━━━━━━{MAGENTA}━━━━━━━━{R}\n")
 
-        choice = input("Votre choix: ").strip()
+        # Menu avec couleurs alternées
+        menu_items = [
+            ("1", "Créer une nouvelle adresse email", CYAN),
+            ("2", "Voir la boîte de réception", MAGENTA),
+            ("3", "Lire un message par ID", JAUNE),
+            ("4", "Supprimer le compte local", ROUGE),
+            ("5", "Vérifier les emails rapidement", VERT),
+            ("6", "🔄 Vérifier les mises à jour", BLEU),
+            ("0", "Quitter", ROUGE)
+        ]
+
+        for key, desc, color in menu_items:
+            print(f"{color}{GRAS}{key}. {desc}{R}")
+
+        choice = input(f"\n{BLANC}Votre choix: {R}").strip()
 
         if choice == '1':
             cli.create_account()
-            wait_for_input("Compte créé. Entrée pour continuer...")
+            wait_for_input(f"{VERT}Entrée pour continuer...{R}")
         elif choice == '6':
             check_remote_update()
-            wait_for_input("Entrée pour revenir au menu...")
+            wait_for_input(f"{CYAN}Entrée pour revenir au menu...{R}")
         elif choice == '0':
+            print(f"{ROUGE}👋 Au revoir !{R}")
             break
         else:
-            wait_for_input("Option non implémentée. Entrée pour continuer...")
+            wait_for_input(f"{JAUNE}Option non implémentée. Entrée pour continuer...{R}")
 
 if __name__ == "__main__":
     main_cli()
