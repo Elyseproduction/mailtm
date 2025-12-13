@@ -1384,9 +1384,9 @@ def main_cli():
 
         print(f"{BLEU}||{R}{access_status_display}")
 
-        print(VERT + GRAS + "="*46 + R)
+        print(CYAN + GRAS + "="*46 + R)
 
-        print(VERT + GRAS + "="*46 + R)
+        print(CYAN + GRAS + "="*46 + R)
 
 
 
@@ -1617,6 +1617,7 @@ if __name__ == '__main__':
         print("pip install requests html2text colorama")
 
         print(f"--------------------{R}\n")
+
 
 
 
