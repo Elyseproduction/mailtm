@@ -268,7 +268,8 @@ class MailTmCLI:
         password = generate_random_string(12)
         data = {"address": email, "password": password}
         delay = random.uniform(1.5, 4.0)
-        loading_spinner(f"Création de {email} (Attente : {delay:.1f}s)", delay)
+        print(f"Création de {email} (Attente : {delay:.1f}s)")
+        time.sleep(3)
         cleanup_line() 
         try:
             headers = {'User-Agent': get_random_user_agent()}
@@ -823,6 +824,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print(f"\n{CYAN}Interruption par l'utilisateur. Sortie.{R}")
         sys.exit(0)
+
 
 
 
