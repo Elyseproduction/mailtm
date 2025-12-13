@@ -175,6 +175,13 @@ def main_cli():
 
     while True:
         clear_screen()
+        print(CYAN + GRAS + "=" * 55 + R)
+        print(CYAN + GRAS + "=" * 55 + R)
+        print(f"{GRAS}         M  E  N  U    P  R  I  N  C  I  P  A  L      {R}")
+        print(f"{JAUNE}{GRAS}                 Version : v{APP_VERSION}{R}")
+        print(CYAN + GRAS + "=" * 55 + R)
+        print(CYAN + GRAS + "=" * 55 + R)
+        print("")
         print(f"{CYAN}{GRAS}1. Créer une nouvelle adresse email{R}")
         print(f"{CYAN}{GRAS}2. Voir la boîte de réception{R}")
         print(f"{CYAN}{GRAS}3. Lire un message par ID{R}")
