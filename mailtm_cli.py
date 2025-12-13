@@ -677,9 +677,9 @@ def main_cli():
         print(CYAN + GRAS + "="*46 + R)
         
         # --- AFFICHAGE DU STATUT DE MISE À JOUR DANS LE MENU ---
-        print(f"{BLEU}{GRAS}|| {access_status_display}")
+        print(f"{access_status_display}")
         print(f"{JAUNE}{GRAS}----------------------------------------------{R}") 
-        print(f"{VERT}{GRAS}|| {update_notification}") 
+        print(f"{update_notification}") 
         print(CYAN + GRAS + "="*46 + R)
         # -------------------------------------------------------
 
@@ -787,10 +787,10 @@ def main_cli():
             cleanup_line()
             
             if update_available:
-                update_notification = f"{ROUGE}{GRAS}🔥 MISE À JOUR DISPONIBLE (Option 7) !{R}"
+                update_notification = f"{ROUGE}{GRAS}|| 🔥 MISE À JOUR DISPONIBLE (Option 7) !{R}"
                 print(f"{ROUGE}🚨 Une mise à jour est disponible ! Exécutez l'Option 7 pour l'appliquer{R}")
             else:
-                update_notification = f"{VERT}{GRAS}S C R I P T  À  J O U R{R}"
+                update_notification = f"{VERT}{GRAS}|| S C R I P T  À  J O U R{R}"
                 print(f"{VERT}✅ Le statut du script est mis à jour. Aucune action n'est requise{R}")
             
             time.sleep(3)
@@ -823,6 +823,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print(f"\n{CYAN}Interruption par l'utilisateur. Sortie.{R}")
         sys.exit(0)
+
 
 
 
