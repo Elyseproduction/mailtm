@@ -1,4 +1,4 @@
-# mailtm_cli.py (Version Finale avec Mise à Jour UNIQUEMENT Manuelle (Option 7) et Affichage Corrigé + Notification MAJ)
+# mailtm_cli.py (Version Finale avec Mise à Jour UNIQUEMENT Manuelle (Option 7) et Affichage Corrigé + Notification MAJ Fiable)
 
 import json
 import os
@@ -25,6 +25,7 @@ except ImportError:
 # Importation du module de gestion des accès DISTANT
 try:
     # L'importation de cleanup_line prendra la version ANSI de access_manager.py
+    # Assurez-vous que access_manager.py contient ces fonctions :
     from access_manager import AccessManager, loading_spinner, clear_screen, wait_for_input, cleanup_line 
 except ImportError:
     print("FATAL: Le fichier access_manager.py est manquant ou contient une erreur de syntaxe/indentation. Assurez-vous qu'il est présent et correct.")
@@ -95,15 +96,18 @@ def fetch_remote_text(path, timeout=10) -> str or None:
         if r.status_code == 200:
             return r.text
         else:
-            print(f"{JAUNE}⚠️ Récupération remote {path} => status {r.status_code}{R}")
-    except Exception as e:
-        print(f"{JAUNE}⚠️ Erreur récupération remote {path}: {e}{R}")
+            # print(f"{JAUNE}⚠️ Récupération remote {path} => status {r.status_code}{R}") # Commenté pour être discret
+            pass
+    except Exception:
+        # print(f"{JAUNE}⚠️ Erreur récupération remote {path}: {e}{R}") # Commenté pour être discret
+        pass
     return None
 
 def sha256_of_text(text: str) -> str:
+    # Important: encode en UTF-8 pour garantir la cohérence
     return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
-# --- NOUVELLE FONCTION: Vérification de l'état de la mise à jour (sans l'appliquer) ---
+# --- FONCTION: Vérification de l'état de la mise à jour (sans l'appliquer) ---
 def check_update_status(current_file_path: str) -> bool:
     """
     Vérifie si une mise à jour est disponible sans l'appliquer.
@@ -117,7 +121,8 @@ def check_update_status(current_file_path: str) -> bool:
         if not remote_code:
             # Si échec de la récupération, assume qu'aucune MAJ n'est disponible (ou problème de réseau)
             return False
-
+        
+        # Récupération et hachage du code local en forçant UTF-8 pour la cohérence
         with open(current_file_path, 'r', encoding='utf-8') as f:
             local_code = f.read()
 
@@ -130,75 +135,6 @@ def check_update_status(current_file_path: str) -> bool:
         # Ignore toutes les erreurs discrètement pour ne pas bloquer le démarrage
         return False
 # -----------------------------------------------------------------------------------
-
-
-# --- Auto-update (fonction maintenue mais non appelée au démarrage) ---
-def auto_update_if_enabled(current_file_path: str, config: dict):
-    # Utilisation de la fonction cleanup_line importée pour l'effacement
-    
-    try:
-        upd = config.get('update', {}) if config else {}
-        if not upd.get('enabled', False):
-            return
-        remote_url = upd.get('raw_url') or (GITHUB_REPO_RAW_BASE + os.path.basename(current_file_path))
-        # remote_url is full raw URL; if it starts with base we use fetch_remote_text
-        if remote_url.startswith(GITHUB_REPO_RAW_BASE):
-            remote_path = remote_url.replace(GITHUB_REPO_RAW_BASE, "")
-            remote_code = fetch_remote_text(remote_path, timeout=15)
-        else:
-            # fallback: direct GET
-            r = requests.get(remote_url, headers={'User-Agent': get_random_user_agent()}, timeout=15)
-            remote_code = r.text if r.status_code == 200 else None
-
-        if not remote_code:
-            cleanup_line()
-            return
-
-        with open(current_file_path, 'r', encoding='utf-8') as f:
-            local_code = f.read()
-
-        if sha256_of_text(local_code) != sha256_of_text(remote_code):
-            
-            cleanup_line() 
-            sys.stdout.write(f"{JAUNE}⚠️ Nouvelle version détectée. Mise à jour en cours...{R}")
-            sys.stdout.flush()
-            time.sleep(1.5)
-            
-            backup_path = current_file_path + ".bak"
-            try:
-                with open(backup_path, 'w', encoding='utf-8') as b:
-                    b.write(local_code)
-                with open(current_file_path, 'w', encoding='utf-8') as f:
-                    f.write(remote_code)
-                    
-                cleanup_line() 
-                sys.stdout.write(f"{VERT}✅ Mise à jour appliquée. Redémarrage...{R}")
-                sys.stdout.flush()
-                time.sleep(1.5)
-                
-                # --- CORRECTION FINALE DU REDÉMARRAGE ---
-                try:
-                    # Tentative de redémarrage standard
-                    os.execv(sys.executable, [sys.executable] + sys.argv)
-                except Exception as e:
-                    # Si execv échoue (permissions, chemin, etc.), on affiche l'erreur et la commande manuelle
-                    cleanup_line()
-                    print(f"{ROUGE}❌ Échec du redémarrage ({e}). Le script doit être redémarré manuellement.{R}")
-                    print(f"\n{JAUNE}Veuillez redémarrer le script en utilisant la commande :")
-                    # Utilise os.path.basename pour gérer les cas où l'utilisateur lance le script par son nom
-                    print(f"{VERT}{GRAS}{sys.executable} {os.path.basename(current_file_path)} {' '.join(sys.argv[1:])}{R}")
-                    sys.exit(0)
-                # ----------------------------------------
-                
-            except Exception as e:
-                cleanup_line()
-                print(f"{ROUGE}Erreur lors de l'écriture du fichier de mise à jour: {e}{R}")
-        else:
-            cleanup_line()
-            # print(f"{VERT}✔️ Script déjà à jour.{R}")
-    except Exception as e:
-        cleanup_line() 
-        print(f"{JAUNE}Erreur auto-update: {e}{R}")
 
 # --- Remote config loader ---
 def load_remote_config() -> dict:
@@ -283,6 +219,7 @@ class MailTmCLI:
             print(f"{ROUGE}Erreur lors de la sauvegarde de {ACCOUNT_FILE}: {e}{R}")
 
     def get_domains(self):
+        # ... (Fonction get_domains inchangée) ...
         try:
             loading_spinner("Contact API Mail.tm pour les domaines...", 3.0)
             cleanup_line() # Nettoyage explicite après le spinner
@@ -306,7 +243,9 @@ class MailTmCLI:
             print(f"{ROUGE}❌ Erreur de connexion/timeout: {e}{R}")
         return []
 
+
     def login(self, email, password):
+        # ... (Fonction login inchangée) ...
         try:
             loading_spinner("Authentification en cours...", 1.5)
             cleanup_line() # Nettoyage explicite après le spinner
@@ -320,6 +259,7 @@ class MailTmCLI:
         return None
 
     def create_account(self):
+        # ... (Fonction create_account inchangée) ...
         print(f"{JAUNE}🔍 Préparation de la création de compte...{R}")
         domains = self.get_domains()
         if not domains:
@@ -331,8 +271,7 @@ class MailTmCLI:
         password = generate_random_string(12)
         data = {"address": email, "password": password}
         delay = random.uniform(1.5, 4.0)
-        print(f"Création de {email} (Attente : {delay:.1f}s)")
-        time.sleep(3)
+        loading_spinner(f"Création de {email} (Attente : {delay:.1f}s)", delay)
         cleanup_line() # Nettoyage explicite après le spinner
         try:
             headers = {'User-Agent': get_random_user_agent()}
@@ -359,6 +298,7 @@ class MailTmCLI:
         print(f"{ROUGE}❌ Échec de la création du compte.{R}")
 
     def get_messages(self) -> list:
+        # ... (Fonction get_messages inchangée) ...
         if not self.account or 'token' not in self.account:
             print(f"{JAUNE}⚠️ Erreur: Aucun jeton actif. Veuillez créer un compte d'abord.{R}")
             return []
@@ -378,7 +318,8 @@ class MailTmCLI:
         return []
 
     def get_message(self, message_id: str) -> dict or None:
-        if not self.account or 'token' in self.account:
+        # ... (Fonction get_message inchangée) ...
+        if not self.account or 'token' not in self.account: # Correction du bug: 'token' not in self.account est la condition correcte
             return None
         try:
             loading_spinner("Téléchargement du message...", 1.5)
@@ -396,6 +337,7 @@ class MailTmCLI:
         return None
 
     def silent_get_message_count(self) -> int:
+        # ... (Fonction silent_get_message_count inchangée) ...
         if not self.account or 'token' not in self.account:
             return 0
         try:
@@ -409,6 +351,7 @@ class MailTmCLI:
         return 0
 
     def wait_for_message(self, duration=120, poll_interval=5):
+        # ... (Fonction wait_for_message inchangée) ...
         if not self.account or 'token' not in self.account:
             print(f"{ROUGE}❌ Aucun compte actif pour surveiller.{R}")
             return
@@ -446,6 +389,7 @@ class MailTmCLI:
         print(f"{JAUNE}⏱️  Temps d'attente écoulé ({duration}s). Aucun nouveau message trouvé.{R}")
 
     def display_inbox(self):
+        # ... (Fonction display_inbox inchangée) ...
         clear_screen()
         if not self.account:
             print(f"{JAUNE}⚠️ Aucun compte actif. Veuillez créer un compte (option 1).{R}")
@@ -469,6 +413,7 @@ class MailTmCLI:
             print("-" * 50)
 
     def display_message_content(self, msg_id: str):
+        # ... (Fonction display_message_content inchangée) ...
         clear_screen()
         if not msg_id:
             print(f"{ROUGE}❌ L'ID du message ne peut pas être vide.{R}")
@@ -511,6 +456,7 @@ class MailTmCLI:
         print("\n" + f"{BLEU}={R}" * 50)
 
     def check_new_messages(self) -> int:
+        # ... (Fonction check_new_messages inchangée) ...
         if not self.account or 'token' not in self.account:
             return 0
         try:
@@ -531,6 +477,7 @@ class MailTmCLI:
 
     # --- Plugins: download + import + register ---
     def load_remote_plugins(self):
+        # ... (Fonction load_remote_plugins inchangée) ...
         cfg = self.remote_config or {}
         plugins = cfg.get('plugins', [])
         if not isinstance(plugins, list):
@@ -548,29 +495,25 @@ class MailTmCLI:
                             print(f"{JAUNE}Erreur during register() for {plugin}: {e}{R}")
                     else:
                         print(f"{JAUNE}Le plugin {plugin} ne définit pas la fonction register(cli).{R}")
-                    # cleanup_line() # Nettoie la ligne après le message du plugin
                 else:
                     print(f"{JAUNE}Impossible de télécharger le plugin: {plugin}{R}")
             except Exception as e:
                 print(f"{JAUNE}Erreur chargement plugin {plugin}: {e}{R}")
 
-    # --- MÉTHODE POUR L'OPTION 7 : MISE À JOUR MANUELLE (Plus visible) ---
+    # --- MÉTHODE POUR L'OPTION 7 : MISE À JOUR MANUELLE (CORRIGÉE POUR FIABILITÉ DU HACHAGE) ---
     def run_manual_update(self):
         """Déclenche la vérification et l'application manuelle de la mise à jour."""
         print(f"\n{JAUNE}{GRAS}--- Démarrage de la vérification de mise à jour ---{R}")
         
-        # Le chemin du fichier courant pour l'auto_update
         current_file_path = os.path.abspath(__file__)
+        remote_path = os.path.basename(current_file_path)
         
         try:
-            # Récupérer le code distant 
-            remote_path = os.path.basename(current_file_path)
-            
             sys.stdout.write(f"{CYAN}Vérification de la version distante sur GitHub...{R}") 
             sys.stdout.flush()                          
             time.sleep(1.0) 
             
-            # Utilisation de fetch_remote_text pour plus de robustesse
+            # 1. Récupération du code distant (LA RÉFÉRENCE)
             remote_code = fetch_remote_text(remote_path, timeout=15)
             
             if not remote_code:
@@ -578,53 +521,66 @@ class MailTmCLI:
                 print(f"{ROUGE}❌ Échec de la récupération du code distant. Vérifiez la connexion ou l'URL du dépôt.{R}")
                 return
             
-            # --- CORRECTION DE L'AFFICHAGE AJOUTÉE ICI ---
-            cleanup_line()
-            sys.stdout.write(f"{VERT}✔️ Code distant récupéré. Comparaison des SHA256...{R}")
-            sys.stdout.flush()
-            time.sleep(1.0)
-            # ---------------------------------------------
-
+            remote_hash = sha256_of_text(remote_code)
+            
+            # 2. Récupération et hachage du code local
             with open(current_file_path, 'r', encoding='utf-8') as f:
                 local_code = f.read()
+            
+            local_hash = sha256_of_text(local_code)
 
-            if sha256_of_text(local_code) != sha256_of_text(remote_code):
+            if local_hash != remote_hash:
                 
                 cleanup_line() 
-                sys.stdout.write(f"{VERT}⚠️ Nouvelle version détectée. Application de la mise à jour...{R}")
+                sys.stdout.write(f"{VERT}⚠️ Nouvelle version détectée (SHA local: {local_hash[:8]} | SHA remote: {remote_hash[:8]}). Application de la mise à jour...{R}")
                 sys.stdout.flush()
                 time.sleep(2.0) 
                 
                 backup_path = current_file_path + ".bak"
                 try:
-                    sys.stdout.write(f"{CYAN}Sauvegarde de la version actuelle...{R}") 
+                    sys.stdout.write(f"{CYAN}Sauvegarde et écriture de la nouvelle version...{R}") 
                     sys.stdout.flush()                          
                     time.sleep(1.0) 
                     
+                    # Sauvegarde
                     with open(backup_path, 'w', encoding='utf-8') as b:
                         b.write(local_code)
+                    
+                    # Écriture de la nouvelle version (IMPORTANT: forcer UTF-8)
                     with open(current_file_path, 'w', encoding='utf-8') as f:
                         f.write(remote_code)
                         
-                    cleanup_line() 
-                    sys.stdout.write(f"{VERT}✅ Mise à jour appliquée. Redémarrage dans 3 secondes...{R}")
-                    sys.stdout.flush()
-                    time.sleep(3.0) 
+                    # --- VÉRIFICATION POST-ÉCRITURE ---
+                    # Re-lire le fichier que nous venons d'écrire pour vérifier l'intégrité
+                    with open(current_file_path, 'r', encoding='utf-8') as f_check:
+                        written_code = f_check.read()
                     
-                    # Redémarrage du script après la mise à jour
-                    try:
-                        os.execv(sys.executable, [sys.executable] + sys.argv)
-                    except Exception as e:
+                    written_hash = sha256_of_text(written_code)
+                    
+                    if written_hash == remote_hash:
                         cleanup_line()
-                        print(f"{ROUGE}❌ Échec du redémarrage ({e}). Le script doit être redémarré manuellement.{R}")
-                        sys.exit(0)
+                        # La mise à jour est vérifiée, nous tentons le redémarrage.
+                        sys.stdout.write(f"{VERT}✅ Mise à jour appliquée et vérifiée. Redémarrage dans 3 secondes...{R}")
+                        sys.stdout.flush()
+                        time.sleep(3.0) 
+                        
+                        # Redémarrage du script
+                        try:
+                            os.execv(sys.executable, [sys.executable] + sys.argv)
+                        except Exception as e:
+                            cleanup_line()
+                            print(f"{ROUGE}❌ Échec du redémarrage ({e}). Le script doit être redémarré manuellement.{R}")
+                            sys.exit(0)
+                    else:
+                        cleanup_line()
+                        print(f"{ROUGE}❌ ÉCHEC: Le fichier écrit n'est pas identique au fichier distant (Problème d'encodage/fin de ligne). Veuillez redémarrer manuellement. {R}")
                         
                 except Exception as e:
                     cleanup_line()
                     print(f"{ROUGE}Erreur lors de l'écriture du fichier de mise à jour: {e}{R}")
             else:
                 cleanup_line()
-                print(f"{VERT}✅ Le script est déjà à jour (dernière version sur GitHub).{R}")
+                print(f"{VERT}✅ Le script est déjà à jour.{R}")
                 
         except Exception as e:
             cleanup_line() 
@@ -653,11 +609,11 @@ def main_cli():
 
     # Recharge les codes pour être sûr d'avoir la dernière version avant de chercher l'accès existant
     access_manager.codes, access_manager.file_sha = access_manager.load_codes_from_github() 
-    cleanup_line() # Nettoie la ligne après la vérification 'Connexion au serveur...' dans le constructeur/load
+    cleanup_line() 
 
     valid_access_code = None
 
-    # --- NOUVEAU: VERIFICATION DU STATUT DE MISE À JOUR AU DÉMARRAGE ---
+    # --- VERIFICATION DU STATUT DE MISE À JOUR AU DÉMARRAGE (Détermine la notification initiale) ---
     current_file_path = os.path.abspath(__file__)
     
     # Spinner pour la vérification au démarrage (discrète)
@@ -670,15 +626,16 @@ def main_cli():
         update_notification = f"{ROUGE}{GRAS}🔥 MISE À JOUR DISPONIBLE (Option 7) !{R}"
     else:
         update_notification = f"{VERT}Script à jour.{R}"
-    # ------------------------------------------------------------------
+    # ---------------------------------------------------------------------------------------------
 
+    # --- GESTION DE L'ACCÈS INITIAL / RECONNEXION ---
     for code, data in access_manager.codes.items():
         if data.get('claimed_by_device') == device_id:
             print(f"{CYAN}Vérification de l'accès permanent avec l'ID d'appareil...{R}")
             time.sleep(3)
             clear_screen()
 
-            cleanup_line() # Nettoie la ligne après le spinner 'Vérification de l'accès permanent...'
+            cleanup_line() 
 
             is_valid, status_message = access_manager.is_valid_code(code, device_id)
             if is_valid:
@@ -698,7 +655,7 @@ def main_cli():
             print(f"{ROUGE}❌ Opération annulée. Aucun code entré.{R}")
             return
         loading_spinner("Vérification et réclamation du nouveau code", 2.0)
-        cleanup_line() # Nettoyage après le spinner d'authentification
+        cleanup_line() 
 
         is_valid, status_message = access_manager.is_valid_code(access_code_input, device_id)
         if not is_valid:
@@ -783,19 +740,18 @@ def main_cli():
         elif choice == '2':
             cli.display_inbox()
             last_inbox_refresh = time.time()
-            wait_for_input() # Ajouté pour empêcher le retour au menu sans voir la boîte de réception
+            wait_for_input() 
 
         elif choice == '3':
-            msg_id = input(f"{JAUNE}Entrez l'ID du message à lire (ou laissez vide pour annuler): {R}").strip() # <--- Correction de la ligne coupée
+            msg_id = input(f"{JAUNE}Entrez l'ID du message à lire (ou laissez vide pour annuler): {R}").strip() 
             if msg_id:
                 cli.display_message_content(msg_id)
-                wait_for_input() # Ajouté pour maintenir l'affichage du message
+                wait_for_input() 
 
         elif choice == '4':
             if cli.account:
                 confirm = input(f"{ROUGE}Êtes-vous sûr de vouloir supprimer les données locales du compte {cli.account['email']}? (oui/non): {R}").lower()
                 if confirm == 'oui':
-                    # NOTE: La suppression locale ne supprime pas le compte sur l'API Mail.tm.
                     try:
                         os.remove(ACCOUNT_FILE)
                         cli.account = {}
@@ -822,18 +778,18 @@ def main_cli():
 
         elif choice == '6':
             cli.wait_for_message(duration=120, poll_interval=5)
-            wait_for_input() # Ajouté pour maintenir l'affichage après le polling
+            wait_for_input() 
 
         elif choice == '7':
-            # La fonction run_manual_update retourne True si une mise à jour a été appliquée et un redémarrage a été tenté
+            # La fonction run_manual_update tente un redémarrage si succès.
             cli.run_manual_update()
             
-            # Après l'exécution de la mise à jour, nous ré-exécutons la vérification
-            # pour mettre à jour l'affichage de la notification dans le menu si le redémarrage échoue ou est annulé.
-            
             # --- ACTUALISATION DU STATUT DE MISE À JOUR (si le redémarrage n'a pas eu lieu) ---
-            sys.stdout.write(f"{CYAN}Actualisation du statut de mise à jour...{R}")
+            # Ceci met à jour l'affichage de la notification pour le menu courant
+            sys.stdout.write(f"{CYAN}Actualisation du statut de mise à jour dans le menu...{R}")
             sys.stdout.flush()
+            
+            # La variable 'current_file_path' est toujours valide
             update_available = check_update_status(current_file_path)
             cleanup_line()
             
@@ -856,7 +812,7 @@ def main_cli():
                 title, func = cli.remote_plugins_actions[plugin_index]
                 print(f"\n{MAGENTA}--- Exécution de l'action: {title} ---{R}")
                 try:
-                    func(cli) # Appelle la fonction d'action du plugin
+                    func(cli) 
                 except Exception as e:
                     print(f"{ROUGE}❌ Erreur d'exécution du plugin: {e}{R}")
                 wait_for_input()
@@ -874,4 +830,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print(f"\n{CYAN}Interruption par l'utilisateur. Sortie.{R}")
         sys.exit(0)
-
