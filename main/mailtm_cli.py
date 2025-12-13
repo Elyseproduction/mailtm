@@ -1,5 +1,5 @@
 # mailtm_cli.py (Version Finale + Couleurs Mélangées + Option Mise à jour DISTANTE)
-# Corrigé pour mise à jour 1.2.0 automatique
+# Option 6 corrigée pour mise à jour 1.2.0, autres options intactes
 
 import json
 import os
@@ -10,7 +10,6 @@ import uuid
 import time
 import sys
 from requests.exceptions import ConnectionError, ReadTimeout
-from packaging import version  # Pour comparer correctement les versions
 
 # ===================== VERSION APP =====================
 APP_VERSION = "1.1.0"
@@ -72,6 +71,12 @@ def get_or_create_device_id():
     return new_id
 
 # ===================== MISE À JOUR DISTANTE =====================
+# Option 6 corrigée
+try:
+    from packaging import version
+except ImportError:
+    version = None  # fallback si packaging non installé
+
 def check_remote_update():
     try:
         loading_spinner(f"{CYAN}Vérification des mises à jour...{R}", 2.0)
@@ -87,9 +92,14 @@ def check_remote_update():
         message = cfg.get("message", "")
 
         # Comparaison correcte des versions
-        if version.parse(remote_version) <= version.parse(APP_VERSION):
-            print(f"{VERT}✅ Version à jour ({APP_VERSION}).{R}")
-            return
+        if version:  # Si packaging est installé
+            if version.parse(remote_version) <= version.parse(APP_VERSION):
+                print(f"{VERT}✅ Version à jour ({APP_VERSION}).{R}")
+                return
+        else:  # fallback basique
+            if remote_version <= APP_VERSION:
+                print(f"{VERT}✅ Version à jour ({APP_VERSION}).{R}")
+                return
 
         print(f"""
 {MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -205,6 +215,14 @@ def main_cli():
         if choice == '1':
             cli.create_account()
             wait_for_input(f"{VERT}Entrée pour continuer...{R}")
+        elif choice == '2':
+            wait_for_input(f"{JAUNE}Option 'Voir la boîte de réception' non implémentée dans ce script. Entrée pour continuer...{R}")
+        elif choice == '3':
+            wait_for_input(f"{JAUNE}Option 'Lire un message par ID' non implémentée dans ce script. Entrée pour continuer...{R}")
+        elif choice == '4':
+            wait_for_input(f"{JAUNE}Option 'Supprimer le compte local' non implémentée dans ce script. Entrée pour continuer...{R}")
+        elif choice == '5':
+            wait_for_input(f"{JAUNE}Option 'Vérifier les emails rapidement' non implémentée dans ce script. Entrée pour continuer...{R}")
         elif choice == '6':
             check_remote_update()
             wait_for_input(f"{CYAN}Entrée pour revenir au menu...{R}")
