@@ -968,7 +968,7 @@ class MailTmCLI:
 
         try:
 
-            print("Vérification rapide des nouveaux messages...")
+            print(f"{CYAN}{GRAS}Vérification rapide des nouveaux messages...{R}")
             time.sleep(3)
             clear_screen()
 
@@ -1619,6 +1619,7 @@ if __name__ == '__main__':
         print("pip install requests html2text colorama")
 
         print(f"--------------------{R}\n")
+
 
 
 
