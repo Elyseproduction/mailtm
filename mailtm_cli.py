@@ -1,4 +1,4 @@
-# mailtm_cli.py (Version Finale avec Mise à Jour Corrigée en Mode Binaire)
+# mailtm_cli.py (Version Finale, Intégrale, et Optimisée)
 
 import json
 import os
@@ -501,7 +501,6 @@ class MailTmCLI:
                 print(f"{ROUGE}❌ Échec de la récupération du code distant. Vérifiez la connexion ou l'URL du dépôt.{R}")
                 return
             
-            # Utiliser le hash du code REMOTE tel quel (sans encodage, car fetch_remote_text donne une chaîne)
             remote_hash = sha256_of_text(remote_code)
             
             # 2. Récupération et hachage du code local
@@ -531,11 +530,9 @@ class MailTmCLI:
                         f.write(remote_bytes)
                         
                     # --- VÉRIFICATION POST-ÉCRITURE ---
-                    # Re-lire le fichier en mode binaire
                     with open(current_file_path, 'rb') as f_check:  # <<< Mode 'rb'
                         written_bytes = f_check.read()
                     
-                    # Re-calculer le hash de la référence et du fichier écrit en bytes
                     remote_hash_of_bytes = hashlib.sha256(remote_bytes).hexdigest()
                     written_hash = hashlib.sha256(written_bytes).hexdigest()
 
@@ -757,18 +754,22 @@ def main_cli():
         elif choice == '7':
             cli.run_manual_update()
             
-            # --- ACTUALISATION DU STATUT DE MISE À JOUR ---
+            # --- ACTUALISATION DU STATUT DE MISE À JOUR (POURCÉ) ---
             sys.stdout.write(f"{CYAN}Actualisation du statut de mise à jour dans le menu...{R}")
             sys.stdout.flush()
             
+            # On revérifie l'état du fichier après l'exécution de la MAJ
             update_available = check_update_status(current_file_path)
+            
             cleanup_line()
             
-            if update_available:
-                update_notification = f"{ROUGE}{GRAS}🔥 MISE À JOUR DISPONIBLE (Option 7) !{R}"
-            else:
+            # Si update_available est False, cela signifie que la MAJ est réussie.
+            if not update_available: 
                 update_notification = f"{VERT}Script à jour.{R}"
-            # -----------------------------------------------
+            else:
+                # Si True, il y a eu un échec critique lors de l'écriture.
+                update_notification = f"{ROUGE}{GRAS}🔥 MISE À JOUR DISPONIBLE (Option 7) !{R}"
+            # -------------------------------------------------------
             
             wait_for_input()
 
