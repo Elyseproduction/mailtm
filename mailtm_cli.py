@@ -1,4 +1,4 @@
-# mailtm_cli.py (Version Finale, Intégrale, et Optimisée)
+# mailtm_cli.py (Version Finale avec Hachage Binaire Corrigé)
 
 import json
 import os
@@ -101,35 +101,40 @@ def fetch_remote_text(path, timeout=10) -> str or None:
     return None
 
 def sha256_of_text(text: str) -> str:
-    # Important: encode en UTF-8 pour garantir la cohérence
+    # Note: Cette fonction est utilisée par historique, mais nous passons au hachage direct des bytes pour la fiabilité.
     return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
-# --- FONCTION: Vérification de l'état de la mise à jour (sans l'appliquer) ---
+# --- FONCTION: Vérification de l'état de la mise à jour (EN MODE BINAIRE) ---
 def check_update_status(current_file_path: str) -> bool:
     """
-    Vérifie si une mise à jour est disponible sans l'appliquer.
+    Vérifie si une mise à jour est disponible sans l'appliquer, en utilisant le hachage binaire.
     Retourne True si une mise à jour est trouvée, False sinon.
     """
     try:
         remote_path = os.path.basename(current_file_path)
-        # Tente de récupérer le code distant (timeout court car c'est une vérification de fond)
+        
+        # 1. Récupération du code distant (LA RÉFÉRENCE)
         remote_code = fetch_remote_text(remote_path, timeout=5) 
 
         if not remote_code:
-            # Si échec de la récupération, assume qu'aucune MAJ n'est disponible (ou problème de réseau)
             return False
         
-        # Récupération et hachage du code local en forçant UTF-8 pour la cohérence
-        with open(current_file_path, 'r', encoding='utf-8') as f:
-            local_code = f.read()
+        # Encode en bytes et hache
+        remote_bytes = remote_code.encode('utf-8')
+        remote_hash_of_bytes = hashlib.sha256(remote_bytes).hexdigest()
+        
+        # 2. Récupération et hachage du code local en MODE BINAIRE
+        with open(current_file_path, 'rb') as f: # Lecture en mode binaire 'rb'
+            local_bytes = f.read()
 
-        # Compare les hashes SHA256
-        if sha256_of_text(local_code) != sha256_of_text(remote_code):
+        local_hash = hashlib.sha256(local_bytes).hexdigest() # Hachage des bytes locaux
+
+        # Compare les hashes binaires
+        if local_hash != remote_hash_of_bytes:
             return True # Une différence = mise à jour disponible
         else:
             return False
     except Exception:
-        # Ignore toutes les erreurs discrètement pour ne pas bloquer le démarrage
         return False
 # -----------------------------------------------------------------------------------
 
@@ -501,18 +506,20 @@ class MailTmCLI:
                 print(f"{ROUGE}❌ Échec de la récupération du code distant. Vérifiez la connexion ou l'URL du dépôt.{R}")
                 return
             
-            remote_hash = sha256_of_text(remote_code)
+            # Encode en bytes pour le hachage fiable
+            remote_bytes = remote_code.encode('utf-8')
+            remote_hash_of_bytes = hashlib.sha256(remote_bytes).hexdigest()
             
-            # 2. Récupération et hachage du code local
-            with open(current_file_path, 'r', encoding='utf-8') as f:
-                local_code = f.read()
+            # 2. Récupération et hachage du code local en MODE BINAIRE
+            with open(current_file_path, 'rb') as f_local: # Lecture binaire
+                local_bytes = f_local.read()
             
-            local_hash = sha256_of_text(local_code)
+            local_hash = hashlib.sha256(local_bytes).hexdigest()
 
-            if local_hash != remote_hash:
+            if local_hash != remote_hash_of_bytes:
                 
                 cleanup_line() 
-                print(f"{VERT}⚠️ Nouvelle version détectée (SHA local: {local_hash[:8]} | SHA remote: {remote_hash[:8]}). Tentative d'application...{R}")
+                print(f"{VERT}⚠️ Nouvelle version détectée (SHA local: {local_hash[:8]} | SHA remote: {remote_hash_of_bytes[:8]}). Tentative d'application...{R}")
                 
                 backup_path = current_file_path + ".bak"
                 try:
@@ -520,26 +527,24 @@ class MailTmCLI:
                     sys.stdout.flush()                          
                     time.sleep(1.0) 
                     
-                    # Sauvegarde
+                    # Sauvegarde (écriture en mode texte pour garder une sauvegarde lisible)
                     with open(backup_path, 'w', encoding='utf-8') as b:
-                        b.write(local_code)
+                        b.write(local_bytes.decode('utf-8')) # Decode pour la sauvegarde
                     
                     # --- Écriture en mode binaire pour éviter l'altération des fins de ligne ---
-                    remote_bytes = remote_code.encode('utf-8')
                     with open(current_file_path, 'wb') as f:  # <<< Mode 'wb'
                         f.write(remote_bytes)
                         
                     # --- VÉRIFICATION POST-ÉCRITURE ---
+                    # Re-lire le fichier en mode binaire
                     with open(current_file_path, 'rb') as f_check:  # <<< Mode 'rb'
                         written_bytes = f_check.read()
                     
-                    remote_hash_of_bytes = hashlib.sha256(remote_bytes).hexdigest()
                     written_hash = hashlib.sha256(written_bytes).hexdigest()
-
                     
                     if written_hash == remote_hash_of_bytes:
                         cleanup_line()
-                        sys.stdout.write(f"{VERT}✅ Mise à jour appliquée et vérifiée (Mode Binaire OK). Redémarrage dans 3 secondes...{R}")
+                        sys.stdout.write(f"{VERT}✅ Mise à jour appliquée et vérifiée (Hachage OK). Redémarrage dans 3 secondes...{R}")
                         sys.stdout.flush()
                         time.sleep(3.0) 
                         
@@ -591,7 +596,8 @@ def main_cli():
     
     sys.stdout.write(f"{CYAN}Vérification de l'état des mises à jour...{R}")
     sys.stdout.flush()
-    update_available = check_update_status(current_file_path)
+    # Utilise la nouvelle fonction de vérification binaire
+    update_available = check_update_status(current_file_path) 
     cleanup_line()
     
     if update_available:
@@ -752,24 +758,22 @@ def main_cli():
             wait_for_input() 
 
         elif choice == '7':
+            # Exécute la mise à jour
             cli.run_manual_update()
             
-            # --- ACTUALISATION DU STATUT DE MISE À JOUR (POURCÉ) ---
+            # --- ACTUALISATION DU STATUT DE MISE À JOUR EN FIN DE PROMPT ---
             sys.stdout.write(f"{CYAN}Actualisation du statut de mise à jour dans le menu...{R}")
             sys.stdout.flush()
             
-            # On revérifie l'état du fichier après l'exécution de la MAJ
+            # Re-vérifie l'état (maintenant avec la méthode binaire)
             update_available = check_update_status(current_file_path)
-            
             cleanup_line()
             
-            # Si update_available est False, cela signifie que la MAJ est réussie.
-            if not update_available: 
-                update_notification = f"{VERT}Script à jour.{R}"
-            else:
-                # Si True, il y a eu un échec critique lors de l'écriture.
+            if update_available:
                 update_notification = f"{ROUGE}{GRAS}🔥 MISE À JOUR DISPONIBLE (Option 7) !{R}"
-            # -------------------------------------------------------
+            else:
+                update_notification = f"{VERT}Script à jour.{R}"
+            # -----------------------------------------------
             
             wait_for_input()
 
