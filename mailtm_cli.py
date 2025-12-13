@@ -673,7 +673,7 @@ def main_cli():
         clear_screen()
         print(CYAN + GRAS + "="*46 + R)
         print(CYAN + GRAS + "="*46 + R)
-        print(f"{GRAS} --M  E  N  U    P  R  I  N  C  I  P  A  L--{R}")
+        print(f"{GRAS}  \n--M  E  N  U   P  R  I  N  C  I  P  A  L--\n{R}")
         print(CYAN + GRAS + "="*46 + R)
         
         # --- AFFICHAGE DU STATUT DE MISE À JOUR DANS LE MENU ---
@@ -805,4 +805,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print(f"\n{CYAN}Interruption par l'utilisateur. Sortie.{R}")
         sys.exit(0)
+
 
