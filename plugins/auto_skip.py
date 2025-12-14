@@ -1,4 +1,3 @@
-# plugins/example_plugin_1.py
 
 import sys
 from time import sleep
