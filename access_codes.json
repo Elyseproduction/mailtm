@@ -18,5 +18,10 @@
         "duration_str": "1h",
         "claimed_by_device": "b98dcfe8-ebf1-4039-af5f-c85b7b191b04",
         "expires_at": "2025-12-14T17:41:14.223960"
+    },
+    "ADMIN": {
+        "duration_str": "1h",
+        "claimed_by_device": null,
+        "expires_at": "2025-12-14T17:43:36.178143"
     }
 }
