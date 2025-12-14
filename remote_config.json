@@ -1,0 +1,8 @@
+{
+    "features": {
+        "plugin_loader": true
+    },
+    "plugins": [
+        "auto_skip.py"
+    ]
+}
